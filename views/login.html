@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../public/css/style.css" />
+    <title>Вход</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Вход</h2>
+        <form method="post" action="../login.php">
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <p><?php echo $message; ?></p>
+            <button type="submit">Войти</button>
+        </form>
+
+        <div class="switch-form">
+            <p>Нет аккаунта? <a href="registration.html">Зарегистрироваться</a></p>
+        </div>
+    </div>
+</body>
+</html>
