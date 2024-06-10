@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h2>Вход</h2>
-        <form method="post" action="../login.php">
+        <form method="post" action="../public/process_login.php?action=login">
             <div class="form-group">
                 <label for="username">Имя пользователя:</label>
                 <input type="text" id="username" name="username" required>
@@ -18,12 +18,13 @@
                 <label for="password">Пароль:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <p><?php echo $message; ?></p>
-            <button type="submit">Войти</button>
+            <?php if (isset($_GET['error'])): ?>
+                <p class="error"><?php echo htmlspecialchars($_GET['error']); ?></p>
+            <?php endif; ?>
+            <button class="button-login" type="submit">Войти</button>
         </form>
-
         <div class="switch-form">
-            <p>Нет аккаунта? <a href="registration.html">Зарегистрироваться</a></p>
+            <p>Нет аккаунта? <a href="signup.php">Зарегистрироваться</a></p>
         </div>
     </div>
 </body>

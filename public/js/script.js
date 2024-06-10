@@ -1,82 +1,102 @@
 let textArray = [];
 
-function getCodeBlock(selectElement) {
-    const selectedLanguage = selectElement.value;
-    fetch('backend_script.php', {
+function getCodeBlock(selectLang) {
+    fetch('controllers/CodeController.php', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
         },
-        body: `language=${selectedLanguage}`,
+        body: JSON.stringify({ language: selectLang }),
     })
     .then(response => response.json())
     .then(data => {
         if(data && data.text) {
-            const insertBlock = document.getElementsByClassName('sample')[0];
+            const codeBlock = document.querySelector('.sample');
+            textArray = [];
 
             const lines = data.text.split('\n');
-            const reqExp = '<br />';
             lines.forEach(line => {
-                //console.log(line);
-                textArray.push(line.replace(reqExp, ''));
+                textArray.push(line.trim());
             });
 
-            insertBlock.style.display = 'block';
-            for( let i = 0; i < textArray.length; i++)
-                console.log(textArray[i]);
-            insertBlock.innerHTML = textArray[0];
+            codeBlock.innerText = textArray[0];
+
+            document.querySelector('.processing').style.display = 'block';
+            document.querySelector('.preparation').style.display = 'none';
+            document.getElementById('ready').style.display = 'none';
         }
         else {
             console.log('Error: Invalid data format');
         }
     })
+    .catch(error => console.error('Error:', error));
+}
+
+function saveSessionData(currentData, username, selectLang, attemptTime, speed) {
+    const data = {
+        currentData: currentData,
+        username: username,
+        selectLang: selectLang,
+        attemptTime: attemptTime,
+        speed: speed
+    }
+    fetch('controllers/SessionController.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 }
 
 window.addEventListener('load', function () {
-    const selectElement = document.getElementById('prog-lang');
-
-
     document.getElementById('ready').addEventListener('click', function() {
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
 
-        // analogue of start button
         var time = document.getElementById('time');
         var speed = document.getElementById('speed');
-        var time_start = new Date();
-        var count;
 
-        count = this.value.length;
-
-        getCodeBlock(selectElement);// request to back to receive a code
+        const selectLang = document.getElementById('prog-lang').value;
+        getCodeBlock(selectLang);
         const input = document.getElementById('input');
+        
         let currentIndex = 0;
+        var time_start;
+        var count = 0;
+        const sample = document.querySelector('.sample');
         input.addEventListener('keydown', function(event) {
+            if (!time_start) {
+                time_start = new Date();
+            }
+
             if (event.key === 'Enter') {
-                console.log('enter');
                 event.preventDefault();
-                const insertBlock = document.getElementsByClassName('sample')[0];
-                console.log(`current ${input.value.trim()}`, `from array ${textArray[currentIndex].trim()}`);
                 
                 if (input.value.trim() === textArray[currentIndex].trim()) {
+                    count = count + input.value.length;
                     if (currentIndex < textArray.length - 1) {
                         currentIndex++;
-                        insertBlock.innerHTML = textArray[currentIndex];
-                    }
-                    else { // if the lines matched and this was the last line, complete time tracking and display the result
+                        sample.innerText = textArray[currentIndex];
+                    } else {
                         var time_end = new Date();
-                        var elapsed_time = time_end - time_start;
-                        var count = input.value.length;
-                        var input_speed = count / (elapsed_time / 1000);
-                        
-                        console.log("Elapsed time:", elapsed_time);
-                        console.log("Input speed:", input_speed);
+                        var elapsed_time = (time_end - time_start) / 1000;
 
+                        var input_speed = count / (elapsed_time / 60);
                         
-                        time.textContent = elapsed_time + ' ms';
-                        speed.textContent = input_speed.toFixed(2) + ' cps';
-                        insertBlock.value = '';
+                        time.textContent = elapsed_time.toFixed(1) + ' с';
+                        speed.textContent = input_speed.toFixed(2) + ' символов/мин';
+                        input.value = '';
+
+                        //saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
                     }
                 }
                 input.value = '';
