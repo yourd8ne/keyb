@@ -36,13 +36,14 @@ class DatabaseModel {
         }
     }
 
-    public function SaveSessionData($username, $selectLang, $attemptTime, $totalTime) {
+    public function SaveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed) {
+        $attemptTime = $this->conn->real_escape_string($attemptTime);
         $username = $this->conn->real_escape_string($username);
         $selectLang = $this->conn->real_escape_string($selectLang);
-        $attemptTime = $this->conn->real_escape_string($attemptTime);
-        $totalTime = $this->conn->real_escape_string($totalTime);
+        $timeSpent = $this->conn->real_escape_string($timeSpent);
+        $speed = $this->conn->real_escape_string($speed);
 
-        $sql = "CALL saveSessionData('$username', '$selectLang', '$attemptTime', '$totalTime')";
+        $sql = "CALL saveSessionData('$attemptTime', '$username', '$selectLang', '$timeSpent', '$speed')";
         
         $this->conn->query($sql);
     }

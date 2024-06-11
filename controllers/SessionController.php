@@ -11,23 +11,21 @@ class SessionControler {
     }
 
     public function SaveSessionData($data) {
-        
-        //id(попытки), data(время и дата попытки), time(сколько времени заняла попытка), idUser(idUser'a),
-        //idDict(idсловаря яп и код), idText(сам текст введенный пользователем с ошибками или без), result(успешна ли попытка), inClass(по умолчанию), speed(скорость попытки)
-        $username = $data->username;//?
-        $currentData = $data->currentData;
-        $selectLang = $data->selectLang;
         $attemptTime = $data->attemptTime;
+        $username = $data->username;
+        $selectLang = $data->selectLang;
+        $timeSpent = $data->timeSpent;
         $speed = $data->speed;
-        $idUser = $data->idUser;
-        $idDict = $data->idDict;
-        $idText = $data->idText;
-        $result = $data->result;
-        $this->model->SaveSessionData($username, $selectLang, $attemptTime, $speed);
+
+
+        $this->model->SaveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed);
 
         echo json_encode(['status' => 'success']);
     }
 
+    public function closeModelConnection() {
+        $this->model->closeConnection();
+    }
 }
 
 // Получаем и декодируем JSON данные из POST запроса
@@ -35,6 +33,6 @@ $data = json_decode(file_get_contents('php://input'));
 
 // Используем контроллер для обработки данных
 $controller = new SessionController();
-$controller->saveSessionData($data);
+$controller->SaveSessionData($data);
 $controller->closeModelConnection();
 ?>

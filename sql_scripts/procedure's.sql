@@ -31,15 +31,22 @@ CREATE PROCEDURE getCode(IN language VARCHAR(50))
     
     END //
 
-    CREATE PROCEDURE saveSessionData(
+CREATE PROCEDURE saveSessionData(
+    IN p_attemptTime TIMESTAMP, -- дата и время попытки
     IN p_username VARCHAR(255),
     IN p_selectLang VARCHAR(255),
-    IN p_attemptTime INT,
-    IN p_totalTime INT
+    IN p_timeSpent TIME, -- затраченное время
+    IN p_speed DOUBLE -- скорость
 )
 BEGIN
-    INSERT INTO session_data (username, selectLang, attemptTime, totalTime)
-    VALUES (p_username, p_selectLang, p_attemptTime, p_totalTime);
+    DECLARE v_user_id INT;
+    DECLARE v_dict_id INT;
+
+    SELECT id INTO v_user_id FROM users WHERE login = p_username LIMIT 1;
+    SELECT id INTO v_dict_id FROM dictionary WHERE name = p_selectLang LIMIT 1;
+
+    INSERT INTO approach (date, time, idUser, idDict, inClass, speed)
+    VALUES (p_attemptTime, p_timeSpent, v_user_id, v_dict_id, 1, p_speed);
 END //
 
 DELIMITER ;

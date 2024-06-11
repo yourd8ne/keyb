@@ -35,11 +35,12 @@ if(!isset($_SESSION['username'])) {
         </div>
         <button id='ready'>Ready</button>
         <div class='processing'>
-            <div class='sample'></div><!--<pre><code id="code-block"></code></pre>-->
+            <div class='sample'></div>
             <input type='text' id='input' />
             <div class='output'>
-                <div id='time'>Time: 0s</div>
-                <div id='speed'>Speed: 0 CPM</div>
+                <div id='time'></div>
+                <div id='speed'></div>
+                <button id='again'>Again</button>
             </div>
         </div>
     </div>
@@ -47,6 +48,5 @@ if(!isset($_SESSION['username'])) {
         const username = "<?php echo $_SESSION['username']; ?>";
     </script>
     <script src='public/js/script.js'></script>
-    <script>hljs.highlightAll();</script>
 </body>
 </html>

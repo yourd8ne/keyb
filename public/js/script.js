@@ -32,12 +32,25 @@ function getCodeBlock(selectLang) {
     .catch(error => console.error('Error:', error));
 }
 
-function saveSessionData(currentData, username, selectLang, attemptTime, speed) {
+function formatDateToMySQL(date) {
+    let year = date.getFullYear();
+    let month = ('0' + (date.getMonth() + 1)).slice(-2); // месяцы с 0-11, поэтому прибавляем 1
+    let day = ('0' + date.getDate()).slice(-2);
+    let hours = ('0' + date.getHours()).slice(-2);
+    let minutes = ('0' + date.getMinutes()).slice(-2);
+    let seconds = ('0' + date.getSeconds()).slice(-2);
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function saveSessionData(fullAttemptTime, username, selectLang, timeSpent, speed) {
+    let attemptTime = formatDateToMySQL(fullAttemptTime);
+    console.log(attemptTime, username, selectLang, timeSpent, speed);
     const data = {
-        currentData: currentData,
+        attemptTime: attemptTime, // start try
         username: username,
         selectLang: selectLang,
-        attemptTime: attemptTime,
+        timeSpent: timeSpent, //zatrachenoe vremya na popitky
         speed: speed
     }
     fetch('controllers/SessionController.php', {
@@ -64,6 +77,9 @@ window.addEventListener('load', function () {
 
         var time = document.getElementById('time');
         var speed = document.getElementById('speed');
+
+        time.style.display = 'none';
+        speed.style.display = 'none';
 
         const selectLang = document.getElementById('prog-lang').value;
         getCodeBlock(selectLang);
@@ -92,11 +108,21 @@ window.addEventListener('load', function () {
 
                         var input_speed = count / (elapsed_time / 60);
                         
-                        time.textContent = elapsed_time.toFixed(1) + ' с';
-                        speed.textContent = input_speed.toFixed(2) + ' символов/мин';
-                        input.value = '';
+                        time.style.display = 'block';
+                        speed.style.display = 'block';
+                        time.textContent = 'Time: ' + elapsed_time.toFixed(1) + ' s';
+                        speed.textContent = 'Speed ' + input_speed.toFixed(2) + ' CPM';
+                        //input.value = '';
+                        sample.innerHTML = '';
 
-                        //saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
+                        saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
+                        const again = document.getElementById('again');
+                        again.style.display = 'block';
+                        again.addEventListener('keydown', function(event) {
+                            document.querySelector('.processing').style.display = 'none';
+                            document.querySelector('.preparation').style.display = 'block';
+                            document.getElementById('ready').style.display = 'block';
+                        });
                     }
                 }
                 input.value = '';
