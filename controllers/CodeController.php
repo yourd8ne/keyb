@@ -16,7 +16,7 @@ class CodeController {
             if ($dataFromModel !== null) {
                 // Передаем данные в представление
                 $dataFromController = $dataFromModel;
-                include '../views/getCodeView.php';
+                include '../public/getCode.php';
             } else {
                 throw new Exception('Data not found');
             }
