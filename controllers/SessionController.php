@@ -1,26 +1,29 @@
 <?php
-header('Content-Type: appication/json')
+header('Content-Type: application/json');
 
 require_once '../models/DatabaseModel.php';
 
-class SessionControler {
+class SessionController {
     private $model;
 
     public function __construct() {
         $this->model = new DatabaseModel();
     }
 
-    public function SaveSessionData($data) {
+    public function saveSessionData($data) {
         $attemptTime = $data->attemptTime;
         $username = $data->username;
         $selectLang = $data->selectLang;
         $timeSpent = $data->timeSpent;
         $speed = $data->speed;
 
-
-        $this->model->SaveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed);
-
-        echo json_encode(['status' => 'success']);
+        try {
+            $this->model->saveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed);
+            echo json_encode(['status' => 'success']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     public function closeModelConnection() {
@@ -28,11 +31,15 @@ class SessionControler {
     }
 }
 
-// Получаем и декодируем JSON данные из POST запроса
 $data = json_decode(file_get_contents('php://input'));
 
-// Используем контроллер для обработки данных
+if ($data === null) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON']);
+    exit();
+}
+
 $controller = new SessionController();
-$controller->SaveSessionData($data);
+$controller->saveSessionData($data);
 $controller->closeModelConnection();
 ?>

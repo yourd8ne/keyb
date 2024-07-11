@@ -9,7 +9,8 @@
 <body>
     <div class="container">
         <h2>Вход</h2>
-        <form method="post" action="../public/process_login.php?action=login">
+        <form method="post" action="../controllers/UserController.php">
+            <input type="hidden" name="action" value="login">
             <div class="form-group">
                 <label for="username">Имя пользователя:</label>
                 <input type="text" id="username" name="username" required>

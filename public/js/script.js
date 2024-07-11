@@ -8,14 +8,19 @@ function getCodeBlock(selectLang) {
         },
         body: JSON.stringify({ language: selectLang }),
     })
-    .then(response => response.json())
+    .then(response => {
+        return response.json();
+    })
     .then(data => {
-        if(data && data.text) {
+        if (data.error) {
+            console.error('Error:', data.error);
+        } else if (data.code) {
             const codeBlock = document.querySelector('.sample');
             textArray = [];
 
-            const lines = data.text.split('\n');
+            const lines = data.code.split('\n');
             lines.forEach(line => {
+                //console.log(line.trim());
                 textArray.push(line.trim());
             });
 
@@ -24,9 +29,10 @@ function getCodeBlock(selectLang) {
             document.querySelector('.processing').style.display = 'block';
             document.querySelector('.preparation').style.display = 'none';
             document.getElementById('ready').style.display = 'none';
-        }
-        else {
-            console.log('Error: Invalid data format');
+        
+        } else {
+            console.log(data.text);
+            console.log('Error: Invalid data format', data);
         }
     })
     .catch(error => console.error('Error:', error));
@@ -45,7 +51,7 @@ function formatDateToMySQL(date) {
 
 function saveSessionData(fullAttemptTime, username, selectLang, timeSpent, speed) {
     let attemptTime = formatDateToMySQL(fullAttemptTime);
-    console.log(attemptTime, username, selectLang, timeSpent, speed);
+    console.log(`attemptTime: ${attemptTime}, username: ${username}, selectLang: ${selectLang}, timeSpent: ${timeSpent}, speed: ${speed}`);
     const data = {
         attemptTime: attemptTime, // start try
         username: username,
@@ -110,18 +116,28 @@ window.addEventListener('load', function () {
                         
                         time.style.display = 'block';
                         speed.style.display = 'block';
-                        time.textContent = 'Time: ' + elapsed_time.toFixed(1) + ' s';
-                        speed.textContent = 'Speed ' + input_speed.toFixed(2) + ' CPM';
+                        time.textContent = 'Время: ' + elapsed_time.toFixed(1) + ' с';
+                        speed.textContent = 'Скорость: ' + input_speed.toFixed(2) + ' симв в мин';
                         //input.value = '';
                         sample.innerHTML = '';
 
                         saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
+                        
                         const again = document.getElementById('again');
                         again.style.display = 'block';
-                        again.addEventListener('keydown', function(event) {
+                        again.addEventListener('click', function() {
+                            console.log('again');
+                            again.style.display = 'none';
                             document.querySelector('.processing').style.display = 'none';
                             document.querySelector('.preparation').style.display = 'block';
                             document.getElementById('ready').style.display = 'block';
+                            input.value = '';
+                            sample.innerHTML = '';
+                            time.style.display = 'none';
+                            speed.style.display = 'none';
+                            currentIndex = 0;
+                            count = 0;
+                            time_start = null;
                         });
                     }
                 }

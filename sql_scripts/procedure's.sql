@@ -1,24 +1,34 @@
 DELIMITER //
 
-CREATE PROCEDURE check_user(IN login VARCHAR(50))
+CREATE PROCEDURE check_user(IN name VARCHAR(50), OUT userExists INT)
 BEGIN
-    SELECT id FROM users WHERE login = login;
+    DECLARE countUsers INT;
+    
+    SELECT COUNT(*) INTO countUsers
+    FROM users
+    WHERE login = name;
+
+    IF countUsers > 0 THEN
+        SET userExists = 1;
+    ELSE
+        SET userExists = 0;
+    END IF;
 END //
 
 CREATE PROCEDURE sign_up(
-    IN login VARCHAR(50),
-    IN password VARCHAR(255)
+    IN p_login VARCHAR(50),
+    IN p_password VARCHAR(255)
 )
 BEGIN
-    INSERT INTO users (login, password) VALUES (login, password);
+    INSERT INTO users (login, password) VALUES (p_login, p_password);
 END //
 
-CREATE PROCEDURE login (
-    IN login VARCHAR(50),
-    OUT userPassword VARCHAR(255)
-)
+CREATE PROCEDURE login(IN p_login VARCHAR(50), OUT p_userPassword VARCHAR(255))
 BEGIN
-    SELECT password INTO userPassword FROM users WHERE login = login;
+    SELECT password INTO p_userPassword
+    FROM users
+    WHERE login = p_login
+    LIMIT 1; -- Гарантирует, что будет возвращена только одна строка
 END //
 
 CREATE PROCEDURE getCode(IN language VARCHAR(50))
@@ -32,21 +42,35 @@ CREATE PROCEDURE getCode(IN language VARCHAR(50))
     END //
 
 CREATE PROCEDURE saveSessionData(
-    IN p_attemptTime TIMESTAMP, -- дата и время попытки
-    IN p_username VARCHAR(255),
-    IN p_selectLang VARCHAR(255),
-    IN p_timeSpent TIME, -- затраченное время
-    IN p_speed DOUBLE -- скорость
+    IN attemptTime TIMESTAMP,  -- дата и время попытки
+    IN username VARCHAR(255),
+    IN selectLang VARCHAR(255),
+    IN timeSpent TIME,  -- затраченное время
+    IN speed DOUBLE  -- скорость
 )
 BEGIN
-    DECLARE v_user_id INT;
-    DECLARE v_dict_id INT;
+    DECLARE userId INT;
+    DECLARE dictId INT;
 
-    SELECT id INTO v_user_id FROM users WHERE login = p_username LIMIT 1;
-    SELECT id INTO v_dict_id FROM dictionary WHERE name = p_selectLang LIMIT 1;
+    -- Поиск идентификатора пользователя
+    SELECT id INTO userId FROM users WHERE login = username LIMIT 1;
+    
+    -- Проверка существования пользователя
+    IF userId IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
+    END IF;
+    
+    -- Поиск идентификатора словаря
+    SELECT id INTO dictId FROM dictionary WHERE name = selectLang LIMIT 1;
+    
+    -- Проверка существования словаря
+    IF dictId IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Dictionary not found';
+    END IF;
 
+    -- Вставка данных в таблицу подходов
     INSERT INTO approach (date, time, idUser, idDict, inClass, speed)
-    VALUES (p_attemptTime, p_timeSpent, v_user_id, v_dict_id, 1, p_speed);
+    VALUES (attemptTime, timeSpent, userId, dictId, 1, speed);
 END //
 
 DELIMITER ;

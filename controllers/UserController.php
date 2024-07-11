@@ -1,6 +1,9 @@
 <?php
-require_once '../models/DatabaseModel.php';
-session_start();
+require_once __DIR__ . '/../models/DatabaseModel.php';
+
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 class UserController {
     private $model;
@@ -8,34 +11,12 @@ class UserController {
     public function __construct() {
         $this->model = new DatabaseModel();
     }
-
-    public function login($login, $password) {
-        $result = $this->model->login($login, $password);
-        if ($result === "Успешный вход.") {
-            $_SESSION['username'] = $login;
-        }
-        return $result;
-    }
-
-    public function signup($login, $password) {
-        return $this->model->signup($login, $password);
-    }
-
-    public function __destruct() {
-        $this->model->closeConnection();
-    }
-}
-
-// Обработка действий
-if (isset($_GET['action'])) {
-    $action = $_GET['action'];
-    $controller = new UserController();
-
-    if ($action === 'login' && $_SERVER["REQUEST_METHOD"] === "POST") {
-        $result = $controller->login($_POST['username'], $_POST['password']);
-        error_log("Login result: " . $result);  // Логирование результата
-        if ($result === "Успешный вход.") {
-            error_log("Redirecting to index.php");  // Логирование перед перенаправлением
+    
+    public function login($username, $password) {
+        $result = $this->model->login($username, $password);
+        error_log("Login result: " . $result);
+        if ($result === "Login successful.") {
+            $_SESSION['username'] = $username;
             header("Location: ../index.php");
             exit();
         } else {
@@ -43,11 +24,13 @@ if (isset($_GET['action'])) {
             header("Location: ../views/login.php?error=" . $error);
             exit();
         }
-    } elseif ($action === 'signup' && $_SERVER["REQUEST_METHOD"] === "POST") {
-        $result = $controller->signup($_POST['username'], $_POST['password']);
-        error_log("Signup result: " . $result);  // Логирование результата
+    }
+    
+    public function signup($username, $password) {
+        $result = $this->model->signup($username, $password);
+        error_log("Signup result: " . $result);
         if ($result === "The user has been successfully registered.") {
-            header("Location: ../index.php");
+            header("Location: ../views/login.php?success=1");
             exit();
         } else {
             $error = urlencode($result);
@@ -55,5 +38,19 @@ if (isset($_GET['action'])) {
             exit();
         }
     }
+
+    public function handleRequest() {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+            $action = $_POST['action'];
+            if ($action === 'login') {
+                $this->login($_POST['username'], $_POST['password']);
+            } elseif ($action === 'signup') {
+                $this->signup($_POST['username'], $_POST['password']);
+            }
+        }
+    }
 }
+
+$controller = new UserController();
+$controller->handleRequest();
 ?>
