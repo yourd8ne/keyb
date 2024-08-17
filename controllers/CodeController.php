@@ -24,17 +24,32 @@ class CodeController {
         }
     }
 
+    public function getLanguages() {
+        try {
+            $data = $this->model->getLanguage();
+            echo json_encode($data); // Возвращаем данные в формате JSON
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
     public function closeModelConnection() {
         $this->model->closeConnection();
     }
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$controller = new CodeController();
 
-if (isset($data['language'])) {
-    $controller = new CodeController();
-    $controller->getCode($data['language']);
-    $controller->closeModelConnection();
-} else {
-    echo json_encode(['error' => 'Language parameter missing']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (isset($data['language'])) {
+        $controller->getCode($data['language']);
+    } else {
+        echo json_encode(['error' => 'Language parameter missing']);
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller->getLanguages();
 }
+
+$controller->closeModelConnection();
+?>

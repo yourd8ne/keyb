@@ -13,8 +13,16 @@ class UserController {
     }
     
     public function login($username, $password) {
+        //error_log("Attempting login with username: $username");
+
+        // Debugging
+        // if (empty($username) || empty($password)) {
+        //     error_log("Username or password is empty");
+        // }
+
         $result = $this->model->login($username, $password);
-        error_log("Login result: " . $result);
+        //error_log("Login result: " . $result);
+
         if ($result === "Login successful.") {
             $_SESSION['username'] = $username;
             header("Location: ../index.php");
@@ -28,7 +36,7 @@ class UserController {
     
     public function signup($username, $password) {
         $result = $this->model->signup($username, $password);
-        error_log("Signup result: " . $result);
+        //error_log("Signup result: " . $result);
         if ($result === "The user has been successfully registered.") {
             header("Location: ../views/login.php?success=1");
             exit();
@@ -40,12 +48,31 @@ class UserController {
     }
 
     public function handleRequest() {
+        //error_log("Handling request");
+
+        // Debugging
+        // error_log("Request method: " . $_SERVER["REQUEST_METHOD"]);
+        // error_log("POST data: " . print_r($_POST, true));
+
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
             $action = $_POST['action'];
+            //error_log("Action: $action");
+
             if ($action === 'login') {
+                //error_log("Login action detected");
                 $this->login($_POST['username'], $_POST['password']);
             } elseif ($action === 'signup') {
+                //error_log("Signup action detected");
                 $this->signup($_POST['username'], $_POST['password']);
+            } else {
+                error_log("Unknown action: $action");
+            }
+        } else {
+            // Проверка сессии и перенаправление
+            if (!isset($_SESSION['username'])) {
+                //error_log("Session not found. Redirecting to login page.");
+                header('Location: ../views/login.php');
+                exit();
             }
         }
     }

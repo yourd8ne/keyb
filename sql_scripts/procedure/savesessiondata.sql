@@ -1,46 +1,5 @@
 DELIMITER //
 
-CREATE PROCEDURE check_user(IN name VARCHAR(50), OUT userExists INT)
-BEGIN
-    DECLARE countUsers INT;
-    
-    SELECT COUNT(*) INTO countUsers
-    FROM users
-    WHERE login = name;
-
-    IF countUsers > 0 THEN
-        SET userExists = 1;
-    ELSE
-        SET userExists = 0;
-    END IF;
-END //
-
-CREATE PROCEDURE sign_up(
-    IN p_login VARCHAR(50),
-    IN p_password VARCHAR(255)
-)
-BEGIN
-    INSERT INTO users (login, password) VALUES (p_login, p_password);
-END //
-
-CREATE PROCEDURE login(IN p_login VARCHAR(50), OUT p_userPassword VARCHAR(255))
-BEGIN
-    SELECT password INTO p_userPassword
-    FROM users
-    WHERE login = p_login
-    LIMIT 1; -- Гарантирует, что будет возвращена только одна строка
-END //
-
-CREATE PROCEDURE getCode(IN language VARCHAR(50))
-    BEGIN
-    DECLARE result_json JSON;
-    
-    SELECT text INTO result_json FROM Dictionary WHERE name = language;
-    
-    SELECT result_json AS json_result;
-    
-    END //
-
 CREATE PROCEDURE saveSessionData(
     IN attemptTime TIMESTAMP,  -- дата и время попытки
     IN username VARCHAR(255),

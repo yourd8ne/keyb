@@ -1,4 +1,4 @@
--- without Texts and approach.result, approach.idText
+-- without Texts and attempt.result, attempt.idText
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`dictionary` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `KeyB`.`approach`
+-- Table `KeyB`.`attempt`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `KeyB`.`approach` (
+CREATE TABLE IF NOT EXISTS `KeyB`.`attempt` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `date` TIMESTAMP NOT NULL,
   `time` TIME NOT NULL,
@@ -120,9 +120,9 @@ ENGINE = InnoDB;
 -- ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `KeyB`.`approach`
+-- Table `KeyB`.`attempt`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `KeyB`.`approach` (
+CREATE TABLE IF NOT EXISTS `KeyB`.`attempt` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `date` TIMESTAMP NOT NULL,
   `time` TIME NOT NULL,

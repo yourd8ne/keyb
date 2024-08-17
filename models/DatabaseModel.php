@@ -17,6 +17,22 @@ class DatabaseModel {
         }
     }
 
+    public function getLanguage() {
+        $sql = "CALL getLang()";
+
+        $res = $this->conn->query($sql);
+
+        if ($res && $res->num_rows > 0) {
+            $languages = [];
+            while ($row = $res->fetch_assoc()) {
+                $languages[] = $row;
+            }
+            return $languages;
+        } else {
+            return [];
+        }
+    }
+
     public function getCode($language) {
         $language = $this->conn->real_escape_string($language);
         $sql = "CALL getCode('$language')";
@@ -53,6 +69,7 @@ class DatabaseModel {
     }    
 
     public function login($login, $password) {
+        // to-do: user not exist
         $login = $this->conn->real_escape_string($login);
         $password = $this->conn->real_escape_string($password);
     
