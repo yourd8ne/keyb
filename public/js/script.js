@@ -73,7 +73,7 @@ function saveSessionData(fullAttemptTime, username, selectLang, timeSpent, speed
 }
 
 function getLanguage() {
-    fetch('controllers/CodeController.php', {
+    fetch('controllers/CodeController.php?action=getLanguages', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -88,6 +88,29 @@ function getLanguage() {
             option.text = language.name;
             select.appendChild(option);
         });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function getAttempts() {
+    fetch('controllers/CodeController.php?action=getAttempts', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // const select = document.getElementById('prog-lang');
+        // data.forEach(language => {
+        //     const option = document.createElement('option');
+        //     option.value = language.name;
+        //     option.text = language.name;
+        //     select.appendChild(option);
+        // });
+        console.log(data);
     })
     .catch(error => {
         console.error('Error:', error);

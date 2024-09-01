@@ -76,8 +76,14 @@ BEGIN
     END IF;
 
     -- Вставка данных в таблицу подходов
-    INSERT INTO approach (date, time, idUser, idDict, inClass, speed)
+    INSERT INTO attempt (date, time, idUser, idDict, inClass, speed)
     VALUES (attemptTime, timeSpent, userId, dictId, 1, speed);
 END //
 
+CREATE PROCEDURE getAttempt()
+BEGIN
+
+SELECT * FROM attempt;
+
+END //
 DELIMITER ;

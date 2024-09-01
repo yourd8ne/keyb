@@ -52,6 +52,15 @@ class DatabaseModel {
         }
     }
 
+    // public function getAttempts() {
+    //     $sql = 'CALL getAttempts();';
+    //     $result = $this->conn->query($sql);
+    //     if ($result && $result->num_rows > 0) {
+    //         $row = $result->fetch_assoc();
+            
+    //     }
+    // }
+
     public function saveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed) {
         $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?)");
     

@@ -27,11 +27,20 @@ class CodeController {
     public function getLanguages() {
         try {
             $data = $this->model->getLanguage();
-            echo json_encode($data); // Возвращаем данные в формате JSON
+            echo json_encode($data);
         } catch (Exception $e) {
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
+    
+    // public function getAttempts() {
+    //     try {
+    //         data = $this->model->getAttempts();
+    //         echo json_encode($data);
+    //     } catch (Exception $e) {
+    //         echo json_encode(['error' => $e->getMessage()]);
+    //     }
+    // }
 
     public function closeModelConnection() {
         $this->model->closeConnection();
@@ -48,8 +57,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Language parameter missing']);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $controller->getLanguages();
+    if (isset($_GET['action'])) {
+        switch ($_GET['action']) {
+            case 'getLanguages': 
+                $controller->getLanguages();
+                break;
+            case 'getAttempts':
+                $controller->getAttempts();
+                break;
+            default:
+                echo json_encode(['error' => 'Invalid action']);
+                break;
+        } 
+    } else {
+            echo json_encode(['error' => 'Action parameter missing']);
+    }
 }
+
 
 $controller->closeModelConnection();
 ?>
