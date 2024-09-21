@@ -1,7 +1,7 @@
 let textArray = [];
 
 function getCodeBlock(selectLang) {
-    fetch('controllers/CodeController.php', {
+    return fetch('controllers/CodeController.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -12,16 +12,17 @@ function getCodeBlock(selectLang) {
     .then(data => {
         if (data.error) {
             console.error('Error:', data.error);
+            return Promise.reject(data.error);
         } else if (data.code) {
             const codeBlock = document.querySelector('.sample');
-            textArray = [];
+            textArray = []; // очищаем textArray
 
             const lines = data.code.split('\n');
             lines.forEach(line => {
                 textArray.push(line.trim());
             });
 
-            // Оберните код в теги <pre><code> с соответствующим классом языка
+            // Обновляем блок кода
             codeBlock.innerHTML = `<pre><code class="language-${selectLang}">${textArray[0]}</code></pre>`;
 
             // Инициализация Highlight.js
@@ -32,11 +33,17 @@ function getCodeBlock(selectLang) {
             document.querySelector('.processing').style.display = 'block';
             document.querySelector('.preparation').style.display = 'none';
             document.getElementById('ready').style.display = 'none';
+
+            return Promise.resolve(); // Вернуть успешное завершение
         } else {
             console.log('Error: Invalid data format', data);
+            return Promise.reject('Invalid data format');
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        return Promise.reject(error);
+    });
 }
 
 function formatDateToMySQL(date) {
@@ -169,19 +176,62 @@ window.addEventListener('load', function () {
                         saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
                         
                         const again = document.getElementById('again');
+                        const backToMenu = document.getElementById('back-to-menu');
+
                         again.style.display = 'block';
+                        backToMenu.style.display = 'block'; // Показать кнопку возврата в меню
+
                         again.addEventListener('click', function() {
                             again.style.display = 'none';
+                            backToMenu.style.display = 'none'; // Скрыть кнопку возврата в меню
                             document.querySelector('.processing').style.display = 'none';
                             document.querySelector('.preparation').style.display = 'block';
                             document.getElementById('ready').style.display = 'block';
-                            //input.value = '';
-                            //sample.innerHTML = '';
+                        
+                            // Сброс значений
                             time.style.display = 'none';
                             speed.style.display = 'none';
                             currentIndex = 0;
                             count = 0;
                             time_start = null;
+                        
+                            // Очистка ввода
+                            input.value = '';
+                        
+                            // Получение языка
+                            const newLang = document.getElementById('prog-lang').value;
+                        
+                            // Вызов getCodeBlock() и ожидание загрузки текста
+                            getCodeBlock(newLang).then(() => {
+                                console.log('textArray after getCodeBlock:', textArray); // Логируем содержимое textArray
+                        
+                                // Проверка, что textArray заполнен
+                                if (textArray.length > 0) {
+                                    // Показ блока sample (если вдруг он был скрыт)
+                                    sample.style.display = 'block';
+                                    input.style.display = 'block';
+                                    // Обновление отображаемого текста
+                                    sample.innerHTML = `<pre><code class="language-${newLang}">${textArray[currentIndex]}</code></pre>`;
+                                    hljs.highlightBlock(sample.querySelector('code'));
+                                } else {
+                                    console.error('textArray is empty. Check if getCodeBlock() works correctly.');
+                                }
+                            }).catch(error => {
+                                console.error('Failed to load code block:', error);
+                            });
+                        });
+
+                        // Обработчик для кнопки возврата в меню
+                        backToMenu.addEventListener('click', function() {
+                            document.querySelector('.processing').style.display = 'none';
+                            document.querySelector('.preparation').style.display = 'block';
+                            document.getElementById('ready').style.display = 'block';
+                            backToMenu.style.display = 'none';
+                            again.style.display = 'none';
+                            time.style.display = 'none';
+                            speed.style.display = 'none';
+                            input.value = '';
+                            sample.innerHTML = '';
                         });
                     }
                 }
