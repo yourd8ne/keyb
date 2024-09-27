@@ -35,7 +35,7 @@ $controller->handleRequest();
                 <div id="time"></div>
                 <div id="speed"></div>
                 <button id="again">Повторить</button>
-                <button id="back-to-menu" style="display:none;">Вернуться в меню</button>
+                <button id="back-to-menu">Вернуться в меню</button>
             </div>
         </div>
     </div>

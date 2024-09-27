@@ -93,7 +93,7 @@ input:focus, select:focus {
     margin-top: 10px;
 }
 
-#again {
+#again, #back-to-menu {
     background-color: #4caf50;
     color: white;
     padding: 10px 20px;
@@ -105,7 +105,7 @@ input:focus, select:focus {
     display: none;
 }
 
-.button-login:hover, .button-register:hover, #ready:hover, #again:hover {
+.button-login:hover, .button-register:hover, #ready:hover, #again:hover, #back-to-menu:hover{
     background-color: #45a049;
 }
 
