@@ -25,7 +25,7 @@ class DatabaseModel {
         if ($res && $res->num_rows > 0) {
             $languages = [];
             while ($row = $res->fetch_assoc()) {
-                $languages[] = $row;
+                $languages[] = $row['Name'];
             }
             return $languages;
         } else {
@@ -33,22 +33,22 @@ class DatabaseModel {
         }
     }
 
-    public function getCode($language) {
-        $language = $this->conn->real_escape_string($language);
-        $sql = "CALL getCode('$language')";
+    public function getCode($dictionaryName) {
+        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
+        $sql = "CALL getCode('$dictionaryName')";
 
         $result = $this->conn->query($sql);
         //error_log($result-);
         if ($result && $result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            if (isset($row['json_result'])) {
-                return $row['json_result'];
+            if (isset($row['Code'])) {
+                return $row['Code'];
             } else {
                 //error_log($language);
-                return 'Text not found';
+                return 'Code not found';
             }
         } else {
-            return 'Language not found';
+            return 'Dictionary not found';
         }
     }
 

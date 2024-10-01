@@ -10,12 +10,17 @@ class CodeController {
         $this->model = new DatabaseModel();
     }
 
-    public function getCode($language) {
+    public function getCode($DictionaryName) {
         try {
-            $dataFromModel = $this->model->getCode($language);
+            // Получаем результат из модели
+            $dataFromModel = $this->model->getCode($DictionaryName);
 
             if ($dataFromModel !== null) {
-                echo json_encode(['code' => $dataFromModel]);
+                // Возвращаем как 'Name', так и 'Code'
+                echo json_encode([
+                    'Name' => $dataFromModel['Name'],
+                    'Code' => $dataFromModel['Code']
+                ]);
             } else {
                 throw new Exception('Data not found');
             }

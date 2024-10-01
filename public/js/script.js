@@ -1,27 +1,28 @@
 let textArray = [];
 
-function getCodeBlock(selectLang) {
+function getCodeBlock(selectDictionaryName) {
     return fetch('controllers/CodeController.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ language: selectLang }),
+        body: JSON.stringify({ DictionaryName: selectDictionaryName }),
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
             console.error('Error:', data.error);
             return Promise.reject(data.error);
-        } else if (data.code) {
+        } else if (data) {
+            console.log(data);
             const codeBlock = document.querySelector('.sample');
             textArray = []; // очищаем textArray
 
-            const lines = data.code.split('\n');
+            const lines = data.split('\n');
             lines.forEach(line => {
                 textArray.push(line.trim());
             });
-
+            
             // Обновляем блок кода
             codeBlock.innerHTML = `<pre><code class="language-${selectLang}">${textArray[0]}</code></pre>`;
 
@@ -89,10 +90,13 @@ function getLanguage() {
     .then(response => response.json())
     .then(data => {
         const select = document.getElementById('prog-lang');
+        
+        select.innerHTML = ''; 
+
         data.forEach(language => {
             const option = document.createElement('option');
-            option.value = language.name;
-            option.text = language.name;
+            option.value = language;
+            option.text = language;
             select.appendChild(option);
         });
     })
@@ -100,6 +104,7 @@ function getLanguage() {
         console.error('Error:', error);
     });
 }
+
 
 function getAttempts() {
     fetch('controllers/CodeController.php?action=getAttempts', {
@@ -137,8 +142,9 @@ window.addEventListener('load', function () {
         time.style.display = 'none';
         speed.style.display = 'none';
 
-        const selectLang = document.getElementById('prog-lang').value;
-        getCodeBlock(selectLang);
+        const selectDictionaryName = document.getElementById('prog-lang').value;
+        console.log(selectDictionaryName)
+        getCodeBlock(selectDictionaryName);
         const input = document.getElementById('input');
         
         let currentIndex = 0;
