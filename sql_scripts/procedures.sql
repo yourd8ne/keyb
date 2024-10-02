@@ -37,20 +37,22 @@ END //
 -- Получение кода на основе языка
 CREATE PROCEDURE getCode(IN dictionaryName VARCHAR(50))
 BEGIN
-    DECLARE idDictionary INT;
+    DECLARE id_Dictionary INT;
+    DECLARE id_Language INT;
 
-    -- Получаем id словаря по имени
-    SELECT idDictionary INTO idDictionary
+    -- Получаем id словаря по его имени
+    SELECT idDictionary, Languages_idLanguage INTO id_Dictionary, id_Language
     FROM Dictionaries
     WHERE Name = dictionaryName
     LIMIT 1;
 
     -- Проверка, что словарь найден
-    IF idDictionary IS NOT NULL THEN
-        -- Получаем код по найденному id словаря
-        SELECT Code
-        FROM Dictionary_Codes
-        WHERE Dictionaries_idDictionary = idDictionary;
+    IF id_Dictionary IS NOT NULL THEN
+        -- Получаем код из таблицы Dictionary_Codes и HighliteName из таблицы Languages
+        SELECT dc.Code, l.HighliteName
+        FROM Dictionary_Codes dc
+        JOIN Languages l ON l.idLanguage = id_Language
+        WHERE dc.Dictionaries_idDictionary = id_Dictionary;
     ELSE
         -- Возвращаем ошибку, если словарь не найден
         SIGNAL SQLSTATE '45000'
@@ -99,6 +101,9 @@ BEGIN
     -- Вставка данных о попытке
     INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed)
     VALUES (attemptTime, timeSpent, userId, dictId, 1, speed);
+
+    -- Вывод для диагностики (можно убрать позже)
+    SELECT userId, dictId;
 END //
 
 -- Получение всех попыток

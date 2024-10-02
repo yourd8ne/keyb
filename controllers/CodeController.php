@@ -14,20 +14,22 @@ class CodeController {
         try {
             // Получаем результат из модели
             $dataFromModel = $this->model->getCode($DictionaryName);
-
-            if ($dataFromModel !== null) {
+            
+            if (is_array($dataFromModel)) { // Проверяем, что это массив
                 // Возвращаем как 'Name', так и 'Code'
                 echo json_encode([
-                    'Name' => $dataFromModel['Name'],
+                    'HighliteName' => $dataFromModel['HighliteName'],
                     'Code' => $dataFromModel['Code']
                 ]);
             } else {
-                throw new Exception('Data not found');
+                throw new Exception('Invalid data returned from model'); // Бросаем исключение для строк или null
             }
         } catch (Exception $e) {
+            error_log('Error in getCode: ' . $e->getMessage()); // Логируем ошибку
+            http_response_code(500); // Устанавливаем код ошибки 500
             echo json_encode(['error' => $e->getMessage()]);
         }
-    }
+    }     
 
     public function getLanguages() {
         try {
@@ -52,14 +54,15 @@ class CodeController {
     }
 }
 
+
 $controller = new CodeController();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (isset($data['language'])) {
-        $controller->getCode($data['language']);
+    if (isset($data['dictionaryName'])) {
+        $controller->getCode($data['dictionaryName']);
     } else {
-        echo json_encode(['error' => 'Language parameter missing']);
+        echo json_encode(['error' => 'DictionaryName parameter missing']);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['action'])) {
@@ -75,10 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         } 
     } else {
-            echo json_encode(['error' => 'Action parameter missing']);
+        echo json_encode(['error' => 'Action parameter missing']);
     }
 }
 
-
 $controller->closeModelConnection();
-?>

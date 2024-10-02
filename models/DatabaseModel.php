@@ -36,22 +36,20 @@ class DatabaseModel {
     public function getCode($dictionaryName) {
         $dictionaryName = $this->conn->real_escape_string($dictionaryName);
         $sql = "CALL getCode('$dictionaryName')";
-
+        
         $result = $this->conn->query($sql);
-        //error_log($result-);
+        
         if ($result && $result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            if (isset($row['Code'])) {
-                return $row['Code'];
+            if (isset($row['Code']) && isset($row['HighliteName'])) {
+                return ['HighliteName' => $row['HighliteName'], 'Code' => $row['Code']];
             } else {
-                //error_log($language);
-                return 'Code not found';
+                return null; // Возвращаем null, если данные не найдены
             }
         } else {
-            return 'Dictionary not found';
+            return null;     
         }
     }
-
     // public function getAttempts() {
     //     $sql = 'CALL getAttempts();';
     //     $result = $this->conn->query($sql);

@@ -1,4 +1,5 @@
 let textArray = [];
+let selectLang = '';
 
 function getCodeBlock(selectDictionaryName) {
     return fetch('controllers/CodeController.php', {
@@ -6,7 +7,7 @@ function getCodeBlock(selectDictionaryName) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ DictionaryName: selectDictionaryName }),
+        body: JSON.stringify({ dictionaryName: selectDictionaryName }),
     })
     .then(response => response.json())
     .then(data => {
@@ -14,11 +15,12 @@ function getCodeBlock(selectDictionaryName) {
             console.error('Error:', data.error);
             return Promise.reject(data.error);
         } else if (data) {
-            console.log(data);
+            console.log(data.Code);
+
             const codeBlock = document.querySelector('.sample');
             textArray = []; // очищаем textArray
-
-            const lines = data.split('\n');
+            selectLang = data.HighliteName;
+            const lines = data.Code.split('\n');
             lines.forEach(line => {
                 textArray.push(line.trim());
             });
@@ -143,7 +145,7 @@ window.addEventListener('load', function () {
         speed.style.display = 'none';
 
         const selectDictionaryName = document.getElementById('prog-lang').value;
-        console.log(selectDictionaryName)
+        //console.log(selectDictionaryName)
         getCodeBlock(selectDictionaryName);
         const input = document.getElementById('input');
         
