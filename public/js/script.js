@@ -15,10 +15,9 @@ function getCodeBlock(selectDictionaryName) {
             console.error('Error:', data.error);
             return Promise.reject(data.error);
         } else if (data) {
-            console.log(data.Code);
-
             const codeBlock = document.querySelector('.sample');
             textArray = []; // очищаем textArray
+            selectLang = '';
             selectLang = data.HighliteName;
             const lines = data.Code.split('\n');
             lines.forEach(line => {
@@ -132,119 +131,114 @@ function getAttempts() {
 }
 
 window.addEventListener('load', function () {
-    getLanguage();
-    document.getElementById('ready').addEventListener('click', function() {
-        document.querySelector('.processing').style.display = 'block';
-        document.querySelector('.preparation').style.display = 'none';
-        document.getElementById('ready').style.display = 'none';
+    function resetApp(fullReset = false) {
+        // Скрываем блоки результатов
+        document.getElementById('time').style.display = 'none';
+        document.getElementById('speed').style.display = 'none';
+        document.getElementById('again').style.display = 'none';
+        document.getElementById('back-to-menu').style.display = 'none';
 
-        var time = document.getElementById('time');
-        var speed = document.getElementById('speed');
-
-        time.style.display = 'none';
-        speed.style.display = 'none';
-
-        const selectDictionaryName = document.getElementById('prog-lang').value;
-        //console.log(selectDictionaryName)
-        getCodeBlock(selectDictionaryName);
+        // Сбрасываем ввод
         const input = document.getElementById('input');
+        input.value = '';
+        document.querySelector('.sample').innerHTML = '';
+
+        // Если это полный сброс (для возврата в меню)
+        if (fullReset) {
+            document.querySelector('.processing').style.display = 'none';
+            document.querySelector('.preparation').style.display = 'block';
+            document.getElementById('ready').style.display = 'block';
+        } else {
+            // Получаем новый текст и восстанавливаем обработчики для кнопки "Again"
+            const newLang = document.getElementById('prog-lang').value;
+            getCodeBlock(newLang).then(() => {
+                setupInputHandler(); // Восстанавливаем обработчики ввода
+            });
+        }
+    }
+
+    getLanguage();
+
+    function setupInputHandler() {
+        const input = document.getElementById('input');
+        const sample = document.querySelector('.sample');
+        input.style.display = 'block';
+        sample.style.display = 'block';
         
         let currentIndex = 0;
-        var time_start;
-        var count = 0;
-        const sample = document.querySelector('.sample');
-        input.addEventListener('keydown', function(event) {
+        let time_start;
+        let count = 0;
+
+        // Удаляем старый обработчик, если есть, и добавляем новый
+        input.removeEventListener('keydown', handleInput);
+        input.addEventListener('keydown', handleInput);
+
+        function handleInput(event) {
             if (!time_start) {
                 time_start = new Date();
             }
 
             if (event.key === 'Enter') {
                 event.preventDefault();
-                
+
                 if (input.value.trim() === textArray[currentIndex].trim()) {
-                    count = count + input.value.length;
+                    count += input.value.length;
                     if (currentIndex < textArray.length - 1) {
                         currentIndex++;
                         // Обновление блока кода с подсветкой синтаксиса
                         sample.innerHTML = `<pre><code class="language-${selectLang}">${textArray[currentIndex]}</code></pre>`;
                         hljs.highlightBlock(sample.querySelector('code'));
                     } else {
-                        var time_end = new Date();
-                        var elapsed_time = (time_end - time_start) / 1000;
+                        const time_end = new Date();
+                        const elapsed_time = (time_end - time_start) / 1000;
+                        const input_speed = count / (elapsed_time / 60);
 
-                        var input_speed = count / (elapsed_time / 60);
                         sample.style.display = 'none';
                         input.style.display = 'none';
-                        time.style.display = 'block';
-                        speed.style.display = 'block';
-                        time.textContent = 'Время: ' + elapsed_time.toFixed(1) + ' с';
-                        speed.textContent = 'Скорость: ' + input_speed.toFixed(2) + ' симв в мин';
-                        sample.innerHTML = '';
+                        document.getElementById('time').style.display = 'block';
+                        document.getElementById('speed').style.display = 'block';
+                        document.getElementById('time').textContent = 'Время: ' + elapsed_time.toFixed(1) + ' с';
+                        document.getElementById('speed').textContent = 'Скорость: ' + input_speed.toFixed(2) + ' симв в мин';
 
+                        // Сохранение данных сессии
                         saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
-                        
-                        const again = document.getElementById('again');
-                        const backToMenu = document.getElementById('back-to-menu');
 
-                        again.style.display = 'block';
-                        backToMenu.style.display = 'block'; // Показать кнопку возврата в меню
-
-                        again.addEventListener('click', function() {
-                            again.style.display = 'none';
-                            backToMenu.style.display = 'none'; // Скрыть кнопку возврата в меню
-                            document.querySelector('.processing').style.display = 'none';
-                            document.querySelector('.preparation').style.display = 'block';
-                            document.getElementById('ready').style.display = 'block';
-                        
-                            // Сброс значений
-                            time.style.display = 'none';
-                            speed.style.display = 'none';
-                            currentIndex = 0;
-                            count = 0;
-                            time_start = null;
-                        
-                            // Очистка ввода
-                            input.value = '';
-                        
-                            // Получение языка
-                            const newLang = document.getElementById('prog-lang').value;
-                        
-                            // Вызов getCodeBlock() и ожидание загрузки текста
-                            getCodeBlock(newLang).then(() => {
-                                console.log('textArray after getCodeBlock:', textArray); // Логируем содержимое textArray
-                        
-                                // Проверка, что textArray заполнен
-                                if (textArray.length > 0) {
-                                    // Показ блока sample (если вдруг он был скрыт)
-                                    sample.style.display = 'block';
-                                    input.style.display = 'block';
-                                    // Обновление отображаемого текста
-                                    sample.innerHTML = `<pre><code class="language-${newLang}">${textArray[currentIndex]}</code></pre>`;
-                                    hljs.highlightBlock(sample.querySelector('code'));
-                                } else {
-                                    console.error('textArray is empty. Check if getCodeBlock() works correctly.');
-                                }
-                            }).catch(error => {
-                                console.error('Failed to load code block:', error);
-                            });
-                        });
-
-                        // Обработчик для кнопки возврата в меню
-                        backToMenu.addEventListener('click', function() {
-                            document.querySelector('.processing').style.display = 'none';
-                            document.querySelector('.preparation').style.display = 'block';
-                            document.getElementById('ready').style.display = 'block';
-                            backToMenu.style.display = 'none';
-                            again.style.display = 'none';
-                            time.style.display = 'none';
-                            speed.style.display = 'none';
-                            input.value = '';
-                            sample.innerHTML = '';
-                        });
+                        // Показ кнопок "Again" и "Back to Menu"
+                        document.getElementById('again').style.display = 'block';
+                        document.getElementById('back-to-menu').style.display = 'block';
                     }
                 }
                 input.value = '';
             }
+        }
+    }
+
+    // Обработчик для кнопки "Ready"
+    document.getElementById('ready').addEventListener('click', function () {
+        document.querySelector('.processing').style.display = 'block';
+        document.querySelector('.preparation').style.display = 'none';
+        document.getElementById('ready').style.display = 'none';
+
+        // Скрываем и показываем нужные элементы
+        document.getElementById('time').style.display = 'none';
+        document.getElementById('speed').style.display = 'none';
+        document.querySelector('.sample').style.display = 'block';
+        document.getElementById('input').style.display = 'block';
+
+        // Получение языка программирования и кода
+        const selectDictionaryName = document.getElementById('prog-lang').value;
+        getCodeBlock(selectDictionaryName).then(() => {
+            setupInputHandler(); // Восстанавливаем обработчики ввода
         });
+    });
+
+    // Обработчик для кнопки "Again"
+    document.getElementById('again').addEventListener('click', function () {
+        resetApp(false); // Перезапуск без полного сброса
+    });
+
+    // Обработчик для кнопки возврата в меню
+    document.getElementById('back-to-menu').addEventListener('click', function () {
+        resetApp(true); // Полный сброс для возврата в меню
     });
 });
