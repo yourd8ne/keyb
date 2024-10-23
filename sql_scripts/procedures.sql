@@ -34,7 +34,6 @@ BEGIN
     LIMIT 1;
 END //
 
--- Получение кода на основе языка
 CREATE PROCEDURE getCode(IN dictionaryName VARCHAR(50))
 BEGIN
     DECLARE id_Dictionary INT;
@@ -48,13 +47,12 @@ BEGIN
 
     -- Проверка, что словарь найден
     IF id_Dictionary IS NOT NULL THEN
-        -- Получаем код из таблицы Dictionary_Codes и HighliteName из таблицы Languages
+        -- Еще нужен словарь получить
         SELECT dc.Code, l.HighliteName
         FROM Dictionary_Codes dc
         JOIN Languages l ON l.idLanguage = id_Language
         WHERE dc.Dictionaries_idDictionary = id_Dictionary;
     ELSE
-        -- Возвращаем ошибку, если словарь не найден
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Dictionary not found';
     END IF;
@@ -66,11 +64,10 @@ BEGIN
     SELECT Name FROM Dictionaries;
 END //
 
--- Сохранение данных о попытке
 CREATE PROCEDURE saveSessionData(
     IN attemptTime TIMESTAMP,
     IN username VARCHAR(255),
-    IN selectLang VARCHAR(255),
+    IN selectedDict VARCHAR(255),
     IN timeSpent TIME,
     IN speed DOUBLE
 )
@@ -79,37 +76,51 @@ BEGIN
     DECLARE dictId INT;
 
     -- Поиск идентификатора пользователя
-    SELECT idUsers INTO userId FROM Users WHERE Login = username LIMIT 1;
+    SELECT idUsers INTO userId 
+    FROM Users 
+    WHERE Login = username 
+    LIMIT 1;
 
-    -- Проверка существования пользователя
+    -- Если пользователь не найден, выбрасываем ошибку
     IF userId IS NULL THEN
-        SET userId = 0; -- Или другое действие, так как MyISAM не поддерживает SIGNAL
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Пользователь не найден';
     END IF;
 
     -- Поиск идентификатора словаря
     SELECT idDictionary INTO dictId 
-    FROM Dictionaries d
-    JOIN Languages l ON d.Languages_idLanguage = l.idLanguage
-    WHERE l.Name = selectLang
+    FROM Dictionaries 
+    WHERE Name = selectedDict 
     LIMIT 1;
 
-    -- Проверка существования словаря
+    -- Если словарь не найден, выбрасываем ошибку
     IF dictId IS NULL THEN
-        SET dictId = 0; -- Или другое действие
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Словарь не найден';
     END IF;
 
     -- Вставка данных о попытке
     INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed)
-    VALUES (attemptTime, timeSpent, userId, dictId, 1, speed);
+    VALUES (DATE(attemptTime), TIME(attemptTime), userId, dictId, 1, speed);
 
-    -- Вывод для диагностики (можно убрать позже)
-    SELECT userId, dictId;
 END //
 
 -- Получение всех попыток
 CREATE PROCEDURE getAttempt()
 BEGIN
-    SELECT * FROM Attempt;
+    SELECT
+        a.Date,
+        a.Time,
+        u.Login AS UserName,
+        d.Name AS DictionaryName,
+        a.inClass,
+        ROUND(a.Speed, 2) AS Speed
+    FROM
+        Attempt a
+    JOIN
+        Users u ON a.idUser = u.idUsers
+    JOIN
+        Dictionaries d ON a.idDict = d.idDictionary;
 END //
 
 DELIMITER ;

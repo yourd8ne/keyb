@@ -1,7 +1,13 @@
 let textArray = [];
 let selectLang = '';
+let selectedDictionaryName = '';
 
 function getCodeBlock(selectDictionaryName) {
+    if (!selectDictionaryName) {
+        console.error('Error: selectDictionaryName is empty.');
+        return Promise.reject('No dictionary selected');
+    }
+
     return fetch('controllers/CodeController.php', {
         method: 'POST',
         headers: {
@@ -59,15 +65,23 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveSessionData(fullAttemptTime, username, selectLang, timeSpent, speed) {
+function saveSessionData(fullAttemptTime, username, timeSpent, speed) {
+    if (!selectedDictionaryName) {
+        console.error('Ошибка: не выбран словарь перед сохранением.');
+        return; // Предотвращаем вызов, если словарь не выбран
+    }
+
     let attemptTime = formatDateToMySQL(fullAttemptTime);
+    console.log("Сохранение сессии с выбранным словарем: ", selectedDictionaryName);
+
     const data = {
         attemptTime: attemptTime,
         username: username,
-        selectLang: selectLang,
+        selectedDict: selectedDictionaryName,
         timeSpent: timeSpent,
         speed: speed
     };
+
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {
@@ -93,7 +107,6 @@ function getLanguage() {
         const select = document.getElementById('prog-lang');
         
         select.innerHTML = ''; 
-
         data.forEach(language => {
             const option = document.createElement('option');
             option.value = language;
@@ -106,29 +119,43 @@ function getLanguage() {
     });
 }
 
+// function displayAttempts(data) {
+//     const tableBody = document.querySelector('table tbody');
+//     data.forEach(attempt => {
+//         const row = `<tr>
+//             <td>${attempt.Date}</td>
+//             <td>${attempt.Time}</td>
+//             <td>${attempt.UserName}</td>
+//             <td>${attempt.DictionaryName}</td>
+//             <td>${attempt.inClass}</td>
+//             <td>${attempt.Speed}</td>
+//         </tr>`;
+//         tableBody.innerHTML += row;
+//     });
+// }
 
-function getAttempts() {
-    fetch('controllers/CodeController.php?action=getAttempts', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        // const select = document.getElementById('prog-lang');
-        // data.forEach(language => {
-        //     const option = document.createElement('option');
-        //     option.value = language.name;
-        //     option.text = language.name;
-        //     select.appendChild(option);
-        // });
-        console.log(data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+// function getAttempts() {
+//     fetch('controllers/CodeController.php?action=getAttempts', {
+//         method: 'GET',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         }
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.length > 0) {
+//             data.forEach(attempt => {
+//                 console.log(`Date: ${attempt.Date}, Speed: ${attempt.Speed}`);
+//             });
+//         } else {
+//             console.log('No attempts found');
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error fetching attempts:', error);
+//     });
+// }
+
 
 window.addEventListener('load', function () {
     function resetApp(fullReset = false) {
@@ -151,12 +178,27 @@ window.addEventListener('load', function () {
         } else {
             // Получаем новый текст и восстанавливаем обработчики для кнопки "Again"
             const newLang = document.getElementById('prog-lang').value;
-            getCodeBlock(newLang).then(() => {
+            //selectedDictionaryName = '';
+            selectedDictionaryName = newLang;
+            getCodeBlock(selectedDictionaryName).then(() => {
                 setupInputHandler(); // Восстанавливаем обработчики ввода
             });
         }
     }
-
+    // function resetApp(fullReset = false) {
+    //     const newLang = document.getElementById('prog-lang').value;
+    //     selectedDictionaryName = newLang; // Обновляем словарь после сброса
+    
+    //     if (!selectedDictionaryName) {
+    //         console.error('Ошибка: не выбран словарь после сброса.');
+    //         return;
+    //     }
+    
+    //     getCodeBlock(selectedDictionaryName).then(() => {
+    //         setupInputHandler(); // Восстанавливаем обработчики ввода
+    //     });
+    // }
+    
     getLanguage();
 
     function setupInputHandler() {
@@ -201,7 +243,7 @@ window.addEventListener('load', function () {
                         document.getElementById('speed').textContent = 'Скорость: ' + input_speed.toFixed(2) + ' симв в мин';
 
                         // Сохранение данных сессии
-                        saveSessionData(time_start, username, selectLang, elapsed_time, input_speed);
+                        saveSessionData(time_start, username, elapsed_time, input_speed);
 
                         // Показ кнопок "Again" и "Back to Menu"
                         document.getElementById('again').style.display = 'block';
@@ -215,22 +257,23 @@ window.addEventListener('load', function () {
 
     // Обработчик для кнопки "Ready"
     document.getElementById('ready').addEventListener('click', function () {
+        selectedDictionaryName = document.getElementById('prog-lang').value; // Получаем выбранное значение
+        console.log("Selected dictionary name: ", selectedDictionaryName); // Добавьте этот вывод для диагностики
+
+        if (!selectedDictionaryName) {
+            console.error('Ошибка: не выбран словарь.');
+            return; // Если словарь не выбран, отменяем дальнейшие действия
+        }
+
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
 
-        // Скрываем и показываем нужные элементы
-        document.getElementById('time').style.display = 'none';
-        document.getElementById('speed').style.display = 'none';
-        document.querySelector('.sample').style.display = 'block';
-        document.getElementById('input').style.display = 'block';
-
-        // Получение языка программирования и кода
-        const selectDictionaryName = document.getElementById('prog-lang').value;
-        getCodeBlock(selectDictionaryName).then(() => {
-            setupInputHandler(); // Восстанавливаем обработчики ввода
+        getCodeBlock(selectedDictionaryName).then(() => {
+            setupInputHandler();
         });
     });
+
 
     // Обработчик для кнопки "Again"
     document.getElementById('again').addEventListener('click', function () {

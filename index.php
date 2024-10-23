@@ -18,6 +18,7 @@ $controller->handleRequest();
     <div class="container">
         <h2>Практика набора кода</h2>
         <div class="preparation">
+            <a href="attempts.php" class="btn">View Attempts</a>
             <form class="choose">
                 <div class="form-group">
                     <label for="prog-lang">Выберите язык программирования</label>

@@ -39,24 +39,19 @@ class CodeController {
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
-    
-    // public function getAttempts() {
-    //     try {
-    //         data = $this->model->getAttempts();
-    //         echo json_encode($data);
-    //     } catch (Exception $e) {
-    //         echo json_encode(['error' => $e->getMessage()]);
-    //     }
-    // }
 
+    // Ensure the connection is properly closed
     public function closeModelConnection() {
-        $this->model->closeConnection();
-    }
+        if ($this->model) {
+            $this->model->closeConnection();
+        }
+    }    
 }
 
-
+// Instantiate the controller
 $controller = new CodeController();
 
+// Handle POST and GET requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (isset($data['dictionaryName'])) {
@@ -70,9 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'getLanguages': 
                 $controller->getLanguages();
                 break;
-            case 'getAttempts':
-                $controller->getAttempts();
-                break;
             default:
                 echo json_encode(['error' => 'Invalid action']);
                 break;
@@ -82,4 +74,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Close the database connection after the request is handled
 $controller->closeModelConnection();

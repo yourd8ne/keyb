@@ -50,30 +50,40 @@ class DatabaseModel {
             return null;     
         }
     }
-    // public function getAttempts() {
-    //     $sql = 'CALL getAttempts();';
-    //     $result = $this->conn->query($sql);
-    //     if ($result && $result->num_rows > 0) {
-    //         $row = $result->fetch_assoc();
-            
-    //     }
-    // }
-
-    public function saveSessionData($attemptTime, $username, $selectLang, $timeSpent, $speed) {
-        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?)");
     
+    public function getAttempt() {
+        // Подключение к базе данных
+        $connection = $this->connect(); // Предполагается, что у вас есть метод connect()
+    
+        // SQL-запрос для получения данных из таблицы попыток
+        $query = "CALL GetAttempt()"; // Измените на ваш SQL-запрос или вызов хранимой процедуры
+        $result = $connection->query($query);
+    
+        if (!$result) {
+            throw new Exception("Database query failed: " . $connection->error);
+        }
+    
+        return $result; // Вернуть результат запроса
+    }    
+
+    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed) {
+        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?)");
+        
         if (!$stmt) {
             throw new Exception("Не удалось подготовить запрос: " . $this->conn->error);
         }
     
-        $stmt->bind_param("ssssd", $attemptTime, $username, $selectLang, $timeSpent, $speed);
-    
+        // Для диагностики выводим параметры
+        error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed");
+        
+        $stmt->bind_param("ssssd", $attemptTime, $username, $selectedDict, $timeSpent, $speed);
+        
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);
         }
     
         $stmt->close();
-    }    
+    }
 
     public function login($login, $password) {
         // to-do: user not exist
