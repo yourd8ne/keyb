@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Dictionary_Codes` (
   `Dictionaries_idDictionary` INT NOT NULL,
   `idCode` INT NOT NULL AUTO_INCREMENT,
   `Code` TEXT,
-  PRIMARY KEY (`idCode`)
+  PRIMARY KEY (`Dictionaries_idDictionary`, `idCode`)
 ) ENGINE=MyISAM;
 
 -- -----------------------------------------------------

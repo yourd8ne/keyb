@@ -3,8 +3,7 @@ require_once __DIR__ . '/controllers/AttemptController.php';
 
 $controller = new AttemptsController();
 $attempts = $controller->getAttempts();
-var_dump($attempts); // Для проверки, что возвращается из контроллера
-$controller->closeConnection();
+$controller->closeModelConnection(); // Закрываем соединение
 
 // Проверяем, есть ли данные
 if (isset($attempts['error'])) {
@@ -18,7 +17,7 @@ if (isset($attempts['error'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attempts Table</title>
-    <link rel="stylesheet" href="public/css/style.css" />
+    <link rel="stylesheet" href="public/css/attempt_style.css" />
 </head>
 <body>
     <h2>Attempts Table</h2>
@@ -52,6 +51,6 @@ if (isset($attempts['error'])) {
             <?php endif; ?>
         </tbody>
     </table>
-    <a href="index.php">Back to Menu</a>
+    <a href="keyb.php">Back to Menu</a>
 </body>
 </html>

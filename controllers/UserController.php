@@ -25,7 +25,7 @@ class UserController {
 
         if ($result === "Login successful.") {
             $_SESSION['username'] = $username;
-            header("Location: ../index.php");
+            header("Location: ../keyb.php");
             exit();
         } else {
             $error = urlencode($result);

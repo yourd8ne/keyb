@@ -39,26 +39,34 @@ h2 {
 }
 
 .sample, #input {
-    font-family: monospace;
-    font-size: 16px;
-    line-height: 1.5;
-    padding: 10px;
-    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт */
+    font-size: 16px; /* Одинаковый размер шрифта */
+    line-height: 1; /* Точное выравнивание между строками */
+    padding: 0; /* Убираем отступы */
+    margin: 0; /* Убираем внешние отступы */
     box-sizing: border-box;
     width: 100%;
-    max-width: 600px;
-    margin: 10px 0;
-    display: block;
     background-color: #23241f;
     color: #ccc;
-}
-
-.sample {
-    border: 2px solid #23241f;
+    display: inline-block; /* Сжимаем блок по содержимому */
+    letter-spacing: normal;
 }
 
 #input {
-    border: 2px solid #555; /* Рамка для input */
+    border: 1px solid #555; /* Рамка для input */
+    padding: 2px 12px; /* Небольшие отступы внутри input */
+    height: auto; /* Высота по контенту */
+    outline: none; /* Убираем выделение */
+}
+
+.sample {
+    border: 2px solid transparent; /* Прозрачная граница для выравнивания */
+    display: inline-block; /* Сжимаем блок по содержимому */
+}
+
+.container {
+    display: inline-block; /* Контейнер для плотного выравнивания */
+    text-align: left;
 }
 
 input, select {

@@ -72,8 +72,7 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed) {
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
-    console.log("Сохранение сессии с выбранным словарем: ", selectedDictionaryName);
-
+    console.log(attemptTime, timeSpent);
     const data = {
         attemptTime: attemptTime,
         username: username,
@@ -118,44 +117,6 @@ function getLanguage() {
         console.error('Error:', error);
     });
 }
-
-// function displayAttempts(data) {
-//     const tableBody = document.querySelector('table tbody');
-//     data.forEach(attempt => {
-//         const row = `<tr>
-//             <td>${attempt.Date}</td>
-//             <td>${attempt.Time}</td>
-//             <td>${attempt.UserName}</td>
-//             <td>${attempt.DictionaryName}</td>
-//             <td>${attempt.inClass}</td>
-//             <td>${attempt.Speed}</td>
-//         </tr>`;
-//         tableBody.innerHTML += row;
-//     });
-// }
-
-// function getAttempts() {
-//     fetch('controllers/CodeController.php?action=getAttempts', {
-//         method: 'GET',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         }
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         if (data.length > 0) {
-//             data.forEach(attempt => {
-//                 console.log(`Date: ${attempt.Date}, Speed: ${attempt.Speed}`);
-//             });
-//         } else {
-//             console.log('No attempts found');
-//         }
-//     })
-//     .catch(error => {
-//         console.error('Error fetching attempts:', error);
-//     });
-// }
-
 
 window.addEventListener('load', function () {
     function resetApp(fullReset = false) {
@@ -258,7 +219,7 @@ window.addEventListener('load', function () {
     // Обработчик для кнопки "Ready"
     document.getElementById('ready').addEventListener('click', function () {
         selectedDictionaryName = document.getElementById('prog-lang').value; // Получаем выбранное значение
-        console.log("Selected dictionary name: ", selectedDictionaryName); // Добавьте этот вывод для диагностики
+        //console.log("Selected dictionary name: ", selectedDictionaryName); // Добавьте этот вывод для диагностики
 
         if (!selectedDictionaryName) {
             console.error('Ошибка: не выбран словарь.');

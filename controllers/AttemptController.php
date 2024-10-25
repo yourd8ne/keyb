@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '../models/DatabaseModel.php';
+require_once __DIR__ . '/../models/DatabaseModel.php';
 
 class AttemptsController {
     private $model;

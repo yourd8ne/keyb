@@ -52,19 +52,19 @@ class DatabaseModel {
     }
     
     public function getAttempt() {
-        // Подключение к базе данных
-        $connection = $this->connect(); // Предполагается, что у вас есть метод connect()
+        // Используем существующее подключение
+        $connection = $this->conn; // Используем подключение, инициализированное в конструкторе
     
-        // SQL-запрос для получения данных из таблицы попыток
+        // SQL-запрос для вызова хранимой процедуры
         $query = "CALL GetAttempt()"; // Измените на ваш SQL-запрос или вызов хранимой процедуры
         $result = $connection->query($query);
     
         if (!$result) {
-            throw new Exception("Database query failed: " . $connection->error);
+            throw new Exception("Ошибка выполнения запроса: " . $connection->error);
         }
     
-        return $result; // Вернуть результат запроса
-    }    
+        return $result; // Возвращаем результат запроса
+    }       
 
     public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed) {
         $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?)");

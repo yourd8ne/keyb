@@ -101,7 +101,7 @@ BEGIN
 
     -- Вставка данных о попытке
     INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed)
-    VALUES (DATE(attemptTime), TIME(attemptTime), userId, dictId, 1, speed);
+    VALUES (attemptTime, TIME(timeSpent), userId, dictId, 1, speed);
 
 END //
 
@@ -122,5 +122,58 @@ BEGIN
     JOIN
         Dictionaries d ON a.idDict = d.idDictionary;
 END //
+
+CREATE PROCEDURE insertCode(
+    IN dictName VARCHAR(255),    -- Имя словаря
+    IN codeText TEXT             -- Текст кода
+)
+BEGIN
+    DECLARE dictId INT;
+
+    -- Поиск идентификатора словаря по имени
+    SELECT idDictionary INTO dictId
+    FROM Dictionaries
+    WHERE Name = dictName
+    LIMIT 1;
+
+    -- Если словарь не найден, выбрасываем ошибку
+    IF dictId IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Словарь не найден';
+    ELSE
+        -- Вставка кода в таблицу Dictionary_Codes
+        INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code)
+        VALUES (dictId, codeText);
+    END IF;
+END //
+
+CREATE PROCEDURE insertOrCreateCode(
+    IN dictName VARCHAR(255),      -- Имя словаря
+    IN langId INT,                 -- Идентификатор языка
+    IN codeText TEXT               -- Текст кода
+)
+BEGIN
+    DECLARE dictId INT;
+
+    -- Поиск идентификатора словаря по имени
+    SELECT idDictionary INTO dictId
+    FROM Dictionaries
+    WHERE Name = dictName
+    LIMIT 1;
+
+    -- Если словарь не найден, создаем новый
+    IF dictId IS NULL THEN
+        INSERT INTO Dictionaries (Name, Languages_idLanguage)
+        VALUES (dictName, langId);
+
+        -- Получаем id вновь созданного словаря
+        SET dictId = LAST_INSERT_ID();
+    END IF;
+
+    -- Вставка кода в таблицу Dictionary_Codes
+    INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code)
+    VALUES (dictId, codeText);
+END //
+
 
 DELIMITER ;
