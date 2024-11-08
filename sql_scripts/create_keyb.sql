@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Dictionaries` (
 CREATE TABLE IF NOT EXISTS `KeyB`.`Languages` (
   `idLanguage` INT NOT NULL AUTO_INCREMENT,
   `Name` VARCHAR(255),
-  `HighliteName` VARCHAR(255),
+  `HighlightName` VARCHAR(255),
   PRIMARY KEY (`idLanguage`)
 ) ENGINE=MyISAM;
 
@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempt` (
   `idDict` INT NOT NULL,
   `inClass` TINYINT NOT NULL,
   `Speed` DOUBLE NOT NULL,
+  `NumberOfCharacters` INT NOT NULL,
   PRIMARY KEY (`idAttempt`),
   INDEX `id_user_idx` (`idUser` ASC),
   INDEX `id_dictionary_idx` (`idDict` ASC),

@@ -1,58 +1,5 @@
 let textArray = [];
-let selectLang = '';
 let selectedDictionaryName = '';
-
-function getCodeBlock(selectDictionaryName) {
-    if (!selectDictionaryName) {
-        console.error('Error: selectDictionaryName is empty.');
-        return Promise.reject('No dictionary selected');
-    }
-
-    return fetch('controllers/CodeController.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ dictionaryName: selectDictionaryName }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            console.error('Error:', data.error);
-            return Promise.reject(data.error);
-        } else if (data) {
-            const codeBlock = document.querySelector('.sample');
-            textArray = []; // очищаем textArray
-            selectLang = '';
-            selectLang = data.HighliteName;
-            const lines = data.Code.split('\n');
-            lines.forEach(line => {
-                textArray.push(line.trim());
-            });
-            
-            // Обновляем блок кода
-            codeBlock.innerHTML = `<pre><code class="language-${selectLang}">${textArray[0]}</code></pre>`;
-
-            // Инициализация Highlight.js
-            document.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
-
-            document.querySelector('.processing').style.display = 'block';
-            document.querySelector('.preparation').style.display = 'none';
-            document.getElementById('ready').style.display = 'none';
-
-            return Promise.resolve(); // Вернуть успешное завершение
-        } else {
-            console.log('Error: Invalid data format', data);
-            return Promise.reject('Invalid data format');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        return Promise.reject(error);
-    });
-}
 
 function formatDateToMySQL(date) {
     let year = date.getFullYear();
@@ -65,22 +12,23 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveSessionData(fullAttemptTime, username, timeSpent, speed) {
+function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCharacters) {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return; // Предотвращаем вызов, если словарь не выбран
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
-    console.log(attemptTime, timeSpent);
+    console.log(attemptTime, timeSpent, username, speed, fullAttemptTime, numberOfCharacters);
     const data = {
         attemptTime: attemptTime,
         username: username,
         selectedDict: selectedDictionaryName,
         timeSpent: timeSpent,
-        speed: speed
+        speed: speed,
+        numberOfCharacters: numberOfCharacters
     };
-
+    console.log(data);
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {
@@ -88,9 +36,9 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
     .catch(error => {
         console.error('Error:', error);
+        console.log('Server returned:', error.responseText);
     });
 }
 
@@ -118,113 +66,157 @@ function getLanguage() {
     });
 }
 
+function getCodeBlock(selectDictionaryName) {
+    if (!selectDictionaryName) return Promise.reject('No dictionary selected');
+
+    return fetch('controllers/CodeController.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ dictionaryName: selectDictionaryName }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) return Promise.reject(data.error);
+
+        const codeBlock = document.querySelector('.sample');
+        codeBlock.innerHTML = '';
+
+        // Заполнение массива `textArray`
+        textArray = data.map(item => ({
+            code: item.Code,
+            highlightName: item.HighlightName
+        }));
+
+        return Promise.resolve();
+    })
+    .catch(error => Promise.reject(error));
+}
+
+function displayCodeSample(index) {
+    //console.log(index);
+    const codeBlock = document.querySelector('.sample');
+    const item = textArray[index];
+    console.log(`highlightName ${item.highlightName} - code ${item.code}`);
+    codeBlock.innerHTML = `<pre><code class="${item.highlightName}"></code></pre>`;
+    codeBlock.querySelector('code').textContent = item.code;
+    hljs.highlightBlock(codeBlock.querySelector('code'));
+}
+
+function setupInputHandler() {
+    const input = document.getElementById('input');
+    input.style.display = 'block';
+    let currentArrayIndex = 0;
+    let timeStart;
+    let numberOfCharacters = 0;
+
+    displayCodeSample(currentArrayIndex);
+
+    // Убираем предыдущий обработчик
+    input.removeEventListener('keydown', handleInput);
+    input.addEventListener('keydown', handleInput);
+
+    function handleInput(event) {
+        if (!timeStart) {
+            timeStart = new Date();
+        }
+
+        if (textArray.length === 1) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                //console.log('big code');
+                // Убираем лишние пробелы и переводим строки к единому виду
+                const currentText = textArray[currentArrayIndex].code.replace(/\s/g, '');
+                const userInput = input.value.replace(/\s/g, '');                
+                //console.log(`Текущий фрагмент (currentText): "${currentText}", Введено (userInput): "${userInput}"`);
+    
+                if (userInput === currentText) {
+                    numberOfCharacters += input.value.length;
+                    input.value = '';
+    
+                    endSession(timeStart, numberOfCharacters);
+                } else {
+                    console.log("Неправильный ввод. Попробуйте еще раз.");
+                }
+            }
+        }
+        else if (textArray.length > 1) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                //console.log('array strings code');
+                // Убираем лишние пробелы и переводим строки к единому виду
+                const currentText = textArray[currentArrayIndex].code.replace(/\s+/g, '');
+                const userInput = input.value.replace(/\s+/g, '');
+
+                //console.log(`Текущий фрагмент (currentText): "${currentText}", Введено (userInput): "${userInput}"`);
+    
+                if (userInput === currentText) {
+                    numberOfCharacters += input.value.length;
+                    input.value = '';
+    
+                    if (currentArrayIndex < textArray.length - 1) {
+                        currentArrayIndex++;
+                        displayCodeSample(currentArrayIndex);
+                    } else {
+                        endSession(timeStart, numberOfCharacters);
+                    }
+                } else {
+                    console.log("Неправильный ввод. Попробуйте еще раз.");
+                }
+            }
+        }
+        else {
+            console.log('Error with textArray.lenght');
+        }
+    }
+}
+
+// Функция завершения сессии
+function endSession(timeStart, numberOfCharacters) {
+    const timeEnd = new Date();
+    const elapsed_time = (timeEnd - timeStart) / 1000;
+    const speed = numberOfCharacters / (elapsed_time / 60);
+
+    document.getElementById('time').textContent = `Время: ${elapsed_time.toFixed(1)} с`;
+    document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
+    document.getElementById('time').style.display = 'block';
+    document.getElementById('speed').style.display = 'block';
+
+    document.querySelector('.sample').style.display = 'none';
+    document.getElementById('input').style.display = 'none';
+    document.getElementById('again').style.display = 'block';
+    document.getElementById('back-to-menu').style.display = 'block';
+
+    console.log(elapsed_time, speed, username);
+    saveSessionData(timeStart, username, elapsed_time, speed, numberOfCharacters);
+}
+
 window.addEventListener('load', function () {
     function resetApp(fullReset = false) {
-        // Скрываем блоки результатов
         document.getElementById('time').style.display = 'none';
         document.getElementById('speed').style.display = 'none';
         document.getElementById('again').style.display = 'none';
         document.getElementById('back-to-menu').style.display = 'none';
-
-        // Сбрасываем ввод
-        const input = document.getElementById('input');
-        input.value = '';
+        document.getElementById('input').value = '';
         document.querySelector('.sample').innerHTML = '';
 
-        // Если это полный сброс (для возврата в меню)
         if (fullReset) {
             document.querySelector('.processing').style.display = 'none';
             document.querySelector('.preparation').style.display = 'block';
             document.getElementById('ready').style.display = 'block';
         } else {
-            // Получаем новый текст и восстанавливаем обработчики для кнопки "Again"
-            const newLang = document.getElementById('prog-lang').value;
-            //selectedDictionaryName = '';
-            selectedDictionaryName = newLang;
+            selectedDictionaryName = document.getElementById('prog-lang').value;
             getCodeBlock(selectedDictionaryName).then(() => {
-                setupInputHandler(); // Восстанавливаем обработчики ввода
+                setupInputHandler();
             });
         }
     }
-    // function resetApp(fullReset = false) {
-    //     const newLang = document.getElementById('prog-lang').value;
-    //     selectedDictionaryName = newLang; // Обновляем словарь после сброса
-    
-    //     if (!selectedDictionaryName) {
-    //         console.error('Ошибка: не выбран словарь после сброса.');
-    //         return;
-    //     }
-    
-    //     getCodeBlock(selectedDictionaryName).then(() => {
-    //         setupInputHandler(); // Восстанавливаем обработчики ввода
-    //     });
-    // }
     
     getLanguage();
 
-    function setupInputHandler() {
-        const input = document.getElementById('input');
-        const sample = document.querySelector('.sample');
-        input.style.display = 'block';
-        sample.style.display = 'block';
-        
-        let currentIndex = 0;
-        let time_start;
-        let count = 0;
-
-        // Удаляем старый обработчик, если есть, и добавляем новый
-        input.removeEventListener('keydown', handleInput);
-        input.addEventListener('keydown', handleInput);
-
-        function handleInput(event) {
-            if (!time_start) {
-                time_start = new Date();
-            }
-
-            if (event.key === 'Enter') {
-                event.preventDefault();
-
-                if (input.value.trim() === textArray[currentIndex].trim()) {
-                    count += input.value.length;
-                    if (currentIndex < textArray.length - 1) {
-                        currentIndex++;
-                        // Обновление блока кода с подсветкой синтаксиса
-                        sample.innerHTML = `<pre><code class="language-${selectLang}">${textArray[currentIndex]}</code></pre>`;
-                        hljs.highlightBlock(sample.querySelector('code'));
-                    } else {
-                        const time_end = new Date();
-                        const elapsed_time = (time_end - time_start) / 1000;
-                        const input_speed = count / (elapsed_time / 60);
-
-                        sample.style.display = 'none';
-                        input.style.display = 'none';
-                        document.getElementById('time').style.display = 'block';
-                        document.getElementById('speed').style.display = 'block';
-                        document.getElementById('time').textContent = 'Время: ' + elapsed_time.toFixed(1) + ' с';
-                        document.getElementById('speed').textContent = 'Скорость: ' + input_speed.toFixed(2) + ' симв в мин';
-
-                        // Сохранение данных сессии
-                        saveSessionData(time_start, username, elapsed_time, input_speed);
-
-                        // Показ кнопок "Again" и "Back to Menu"
-                        document.getElementById('again').style.display = 'block';
-                        document.getElementById('back-to-menu').style.display = 'block';
-                    }
-                }
-                input.value = '';
-            }
-        }
-    }
-
-    // Обработчик для кнопки "Ready"
     document.getElementById('ready').addEventListener('click', function () {
-        selectedDictionaryName = document.getElementById('prog-lang').value; // Получаем выбранное значение
-        //console.log("Selected dictionary name: ", selectedDictionaryName); // Добавьте этот вывод для диагностики
-
-        if (!selectedDictionaryName) {
-            console.error('Ошибка: не выбран словарь.');
-            return; // Если словарь не выбран, отменяем дальнейшие действия
-        }
+        selectedDictionaryName = document.getElementById('prog-lang').value;
 
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
@@ -235,14 +227,11 @@ window.addEventListener('load', function () {
         });
     });
 
-
-    // Обработчик для кнопки "Again"
     document.getElementById('again').addEventListener('click', function () {
-        resetApp(false); // Перезапуск без полного сброса
+        resetApp(false);
     });
 
-    // Обработчик для кнопки возврата в меню
     document.getElementById('back-to-menu').addEventListener('click', function () {
-        resetApp(true); // Полный сброс для возврата в меню
+        resetApp(true);
     });
 });

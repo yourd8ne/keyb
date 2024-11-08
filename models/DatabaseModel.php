@@ -17,6 +17,22 @@ class DatabaseModel {
         }
     }
 
+    public function getCode($dictionaryName) {
+        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
+        $sql = "CALL getCode('$dictionaryName')";
+        
+        $result = $this->conn->query($sql);
+        
+        $response = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $response[] = ['HighlightName' => $row['HighlightName'], 'Code' => $row['Code']];
+            }
+        }
+    
+        return !empty($response) ? $response : null;
+    }
+
     public function getLanguage() {
         $sql = "CALL getLang()";
 
@@ -33,50 +49,29 @@ class DatabaseModel {
         }
     }
 
-    public function getCode($dictionaryName) {
-        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
-        $sql = "CALL getCode('$dictionaryName')";
-        
-        $result = $this->conn->query($sql);
-        
-        if ($result && $result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            if (isset($row['Code']) && isset($row['HighliteName'])) {
-                return ['HighliteName' => $row['HighliteName'], 'Code' => $row['Code']];
-            } else {
-                return null; // Возвращаем null, если данные не найдены
-            }
-        } else {
-            return null;     
-        }
-    }
-    
     public function getAttempt() {
         // Используем существующее подключение
-        $connection = $this->conn; // Используем подключение, инициализированное в конструкторе
-    
-        // SQL-запрос для вызова хранимой процедуры
         $query = "CALL GetAttempt()"; // Измените на ваш SQL-запрос или вызов хранимой процедуры
-        $result = $connection->query($query);
+        $result = $this->conn->query($query);
     
         if (!$result) {
-            throw new Exception("Ошибка выполнения запроса: " . $connection->error);
+            throw new Exception("Ошибка выполнения запроса: " . $this->conn->error);
         }
     
         return $result; // Возвращаем результат запроса
     }       
 
-    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed) {
-        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?)");
+    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters) {
+        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?, ?)");
         
         if (!$stmt) {
             throw new Exception("Не удалось подготовить запрос: " . $this->conn->error);
         }
     
         // Для диагностики выводим параметры
-        error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed");
+        error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters");
         
-        $stmt->bind_param("ssssd", $attemptTime, $username, $selectedDict, $timeSpent, $speed);
+        $stmt->bind_param("ssssdi", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
         
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);

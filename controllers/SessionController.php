@@ -16,9 +16,10 @@ class SessionController {
         $selectedDict = $data->selectedDict;
         $timeSpent = $data->timeSpent;
         $speed = $data->speed;
+        $numberOfCharacters = $data->numberOfCharacters;
 
         try {
-            $this->model->saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed);
+            $this->model->saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
             echo json_encode(['status' => 'success']);
         } catch (Exception $e) {
             http_response_code(500);
@@ -33,7 +34,7 @@ class SessionController {
 
 $data = json_decode(file_get_contents('php://input'));
 
-if (!isset($data->attemptTime) || !isset($data->username) || !isset($data->selectedDict) || !isset($data->timeSpent) || !isset($data->speed)) {
+if (!isset($data->attemptTime) || !isset($data->username) || !isset($data->selectedDict) || !isset($data->timeSpent) || !isset($data->speed)) || !isset($data->numberOfCharacters){
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
     exit();

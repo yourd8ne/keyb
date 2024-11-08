@@ -148,10 +148,14 @@ input:focus, select:focus {
 .output {
     margin-top: 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     color: #bbb;
+    align-content: stretch;
+    align-items: flex-end;
+    flex-direction: column;
 }
 
 .output div {
     width: 75%;
+    margin-top: 10px;
 }

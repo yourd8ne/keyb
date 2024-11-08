@@ -48,7 +48,7 @@ BEGIN
     -- Проверка, что словарь найден
     IF id_Dictionary IS NOT NULL THEN
         -- Еще нужен словарь получить
-        SELECT dc.Code, l.HighliteName
+        SELECT dc.Code, l.HighlightName
         FROM Dictionary_Codes dc
         JOIN Languages l ON l.idLanguage = id_Language
         WHERE dc.Dictionaries_idDictionary = id_Dictionary;
@@ -68,42 +68,43 @@ CREATE PROCEDURE saveSessionData(
     IN attemptTime TIMESTAMP,
     IN username VARCHAR(255),
     IN selectedDict VARCHAR(255),
-    IN timeSpent TIME,
-    IN speed DOUBLE
+    IN timeSpent DOUBLE,
+    IN speed DOUBLE,
+    IN numberOfCharacters INT
 )
 BEGIN
     DECLARE userId INT;
     DECLARE dictId INT;
 
     -- Поиск идентификатора пользователя
-    SELECT idUsers INTO userId 
-    FROM Users 
-    WHERE Login = username 
+    SELECT idUsers INTO userId
+    FROM Users
+    WHERE Login = username
     LIMIT 1;
 
     -- Если пользователь не найден, выбрасываем ошибку
     IF userId IS NULL THEN
-        SIGNAL SQLSTATE '45000' 
+        SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Пользователь не найден';
     END IF;
 
     -- Поиск идентификатора словаря
-    SELECT idDictionary INTO dictId 
-    FROM Dictionaries 
-    WHERE Name = selectedDict 
+    SELECT idDictionary INTO dictId
+    FROM Dictionaries
+    WHERE Name = selectedDict
     LIMIT 1;
 
     -- Если словарь не найден, выбрасываем ошибку
     IF dictId IS NULL THEN
-        SIGNAL SQLSTATE '45000' 
+        SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Словарь не найден';
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed)
-    VALUES (attemptTime, TIME(timeSpent), userId, dictId, 1, speed);
-
+    INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed, NumberOfCharacters)
+    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, numberOfCharacters);
 END //
+
 
 -- Получение всех попыток
 CREATE PROCEDURE getAttempt()

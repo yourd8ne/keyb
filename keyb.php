@@ -31,7 +31,7 @@ $controller->handleRequest();
         <div class="processing">
             <div class="sample">
             </div>
-            <input type="text" id="input" />
+            <textarea type="text" id="input"></textarea>
             <div class="output">
                 <div id="time"></div>
                 <div id="speed"></div>

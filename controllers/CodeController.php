@@ -15,21 +15,29 @@ class CodeController {
             // Получаем результат из модели
             $dataFromModel = $this->model->getCode($DictionaryName);
             
-            if (is_array($dataFromModel)) { // Проверяем, что это массив
-                // Возвращаем как 'Name', так и 'Code'
-                echo json_encode([
-                    'HighliteName' => $dataFromModel['HighliteName'],
-                    'Code' => $dataFromModel['Code']
-                ]);
-            } else {
-                throw new Exception('Invalid data returned from model'); // Бросаем исключение для строк или null
+            if (!is_array($dataFromModel)) {
+                throw new Exception('Data returned from model is not an array');
             }
+    
+            $response = [];
+            foreach ($dataFromModel as $item) {
+                if (!is_array($item) || !isset($item['HighlightName'], $item['Code'])) {
+                    throw new Exception('Invalid data format in model response');
+                }
+                $response[] = [
+                    'HighlightName' => $item['HighlightName'],
+                    'Code' => $item['Code']
+                ];
+            }
+            echo json_encode($response);
         } catch (Exception $e) {
-            error_log('Error in getCode: ' . $e->getMessage()); // Логируем ошибку
-            http_response_code(500); // Устанавливаем код ошибки 500
-            echo json_encode(['error' => $e->getMessage()]);
+            //error_log('Error in getCode: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'error' => 'An error occurred while fetching code data'
+            ]);
         }
-    }     
+    }
 
     public function getLanguages() {
         try {
@@ -40,7 +48,6 @@ class CodeController {
         }
     }
 
-    // Ensure the connection is properly closed
     public function closeModelConnection() {
         if ($this->model) {
             $this->model->closeConnection();
@@ -48,10 +55,8 @@ class CodeController {
     }    
 }
 
-// Instantiate the controller
 $controller = new CodeController();
 
-// Handle POST and GET requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (isset($data['dictionaryName'])) {
@@ -74,5 +79,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Close the database connection after the request is handled
 $controller->closeModelConnection();
