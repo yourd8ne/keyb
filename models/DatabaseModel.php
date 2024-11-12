@@ -50,15 +50,14 @@ class DatabaseModel {
     }
 
     public function getAttempt() {
-        // Используем существующее подключение
-        $query = "CALL GetAttempt()"; // Измените на ваш SQL-запрос или вызов хранимой процедуры
+        $query = "CALL GetAttempt()";
         $result = $this->conn->query($query);
     
         if (!$result) {
             throw new Exception("Ошибка выполнения запроса: " . $this->conn->error);
         }
     
-        return $result; // Возвращаем результат запроса
+        return $result;
     }       
 
     public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters) {
@@ -69,9 +68,9 @@ class DatabaseModel {
         }
     
         // Для диагностики выводим параметры
-        error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters");
+        //error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters");
         
-        $stmt->bind_param("ssssdi", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
+        $stmt->bind_param("sssddi", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
         
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);

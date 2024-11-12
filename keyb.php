@@ -29,7 +29,7 @@ $controller->handleRequest();
         </div>
         <button id="ready">Готов</button>
         <div class="processing">
-            <div class="sample">
+            <div class="sample"><!--inert-->
             </div>
             <textarea type="text" id="input"></textarea>
             <div class="output">
@@ -39,6 +39,10 @@ $controller->handleRequest();
                 <button id="back-to-menu">Вернуться в меню</button>
             </div>
         </div>
+        <?php if (isset($_SESSION['username'])): ?>
+            <button id="logout" onclick="window.location.href='?action=logout'">Выйти</button>
+        <?php endif; ?>
+
     </div>
     <?php if (isset($_SESSION['username'])): ?>
     <script>

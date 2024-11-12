@@ -47,12 +47,28 @@ class UserController {
         }
     }
 
-    public function handleRequest() {
-        //error_log("Handling request");
+    public function logout() {
+        // Очистка всех данных сессии и удаление cookie
+        session_start();
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        session_destroy();
 
-        // Debugging
-        // error_log("Request method: " . $_SERVER["REQUEST_METHOD"]);
-        // error_log("POST data: " . print_r($_POST, true));
+        header('Location: ../views/login.php');
+        exit();
+    }
+
+    public function handleRequest() {
+
+        if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+            $this->logout();
+        }
 
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
             $action = $_POST['action'];

@@ -1,6 +1,12 @@
 let textArray = [];
 let selectedDictionaryName = '';
 
+const appState = {
+    timeStart: null,
+    numberOfCharacters: 0,
+    currentArrayIndex: 0,
+};
+
 function formatDateToMySQL(date) {
     let year = date.getFullYear();
     let month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -15,7 +21,7 @@ function formatDateToMySQL(date) {
 function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCharacters) {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
-        return; // Предотвращаем вызов, если словарь не выбран
+        return;
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
@@ -83,7 +89,6 @@ function getCodeBlock(selectDictionaryName) {
         const codeBlock = document.querySelector('.sample');
         codeBlock.innerHTML = '';
 
-        // Заполнение массива `textArray`
         textArray = data.map(item => ({
             code: item.Code,
             highlightName: item.HighlightName
@@ -95,7 +100,6 @@ function getCodeBlock(selectDictionaryName) {
 }
 
 function displayCodeSample(index) {
-    //console.log(index);
     const codeBlock = document.querySelector('.sample');
     const item = textArray[index];
     console.log(`highlightName ${item.highlightName} - code ${item.code}`);
@@ -104,79 +108,55 @@ function displayCodeSample(index) {
     hljs.highlightBlock(codeBlock.querySelector('code'));
 }
 
-function setupInputHandler() {
-    const input = document.getElementById('input');
-    input.style.display = 'block';
-    let currentArrayIndex = 0;
-    let timeStart;
-    let numberOfCharacters = 0;
+function handleInput(event) {
+    if (!appState.timeStart) {
+        appState.timeStart = new Date();
+    }
 
-    displayCodeSample(currentArrayIndex);
+    const currentText = textArray[appState.currentArrayIndex].code.replace(/\s+/g, '');
+    const userInput = event.target.value.replace(/\s+/g, '');
 
-    // Убираем предыдущий обработчик
-    input.removeEventListener('keydown', handleInput);
-    input.addEventListener('keydown', handleInput);
 
-    function handleInput(event) {
-        if (!timeStart) {
-            timeStart = new Date();
-        }
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
+        if (userInput === currentText) {
+            appState.numberOfCharacters += event.target.value.length;
+            event.target.value = '';
 
-        if (textArray.length === 1) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                //console.log('big code');
-                // Убираем лишние пробелы и переводим строки к единому виду
-                const currentText = textArray[currentArrayIndex].code.replace(/\s/g, '');
-                const userInput = input.value.replace(/\s/g, '');                
-                //console.log(`Текущий фрагмент (currentText): "${currentText}", Введено (userInput): "${userInput}"`);
-    
-                if (userInput === currentText) {
-                    numberOfCharacters += input.value.length;
-                    input.value = '';
-    
-                    endSession(timeStart, numberOfCharacters);
-                } else {
-                    console.log("Неправильный ввод. Попробуйте еще раз.");
-                }
+            if (appState.currentArrayIndex < textArray.length - 1) {
+                appState.currentArrayIndex++;
+                displayCodeSample(appState.currentArrayIndex);
+            } else {
+                endSession();
             }
-        }
-        else if (textArray.length > 1) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                //console.log('array strings code');
-                // Убираем лишние пробелы и переводим строки к единому виду
-                const currentText = textArray[currentArrayIndex].code.replace(/\s+/g, '');
-                const userInput = input.value.replace(/\s+/g, '');
-
-                //console.log(`Текущий фрагмент (currentText): "${currentText}", Введено (userInput): "${userInput}"`);
-    
-                if (userInput === currentText) {
-                    numberOfCharacters += input.value.length;
-                    input.value = '';
-    
-                    if (currentArrayIndex < textArray.length - 1) {
-                        currentArrayIndex++;
-                        displayCodeSample(currentArrayIndex);
-                    } else {
-                        endSession(timeStart, numberOfCharacters);
-                    }
-                } else {
-                    console.log("Неправильный ввод. Попробуйте еще раз.");
-                }
-            }
-        }
-        else {
-            console.log('Error with textArray.lenght');
+        } else {
+            console.log("Incorrect input. Please try again.");
         }
     }
 }
 
-// Функция завершения сессии
-function endSession(timeStart, numberOfCharacters) {
+function setupInputHandler() {
+    const input = document.getElementById('input');
+    input.style.display = 'block';
+
+    displayCodeSample(appState.currentArrayIndex);
+
+    // Убираем предыдущий обработчик, если он был установлен ранее
+    input.removeEventListener('keydown', handleInput); 
+    input.addEventListener('keydown', handleInput);
+}
+
+function endSession() {
     const timeEnd = new Date();
-    const elapsed_time = (timeEnd - timeStart) / 1000;
-    const speed = numberOfCharacters / (elapsed_time / 60);
+    console.log(`timeStart endSession ${appState.timeStart}`);
+    if (!appState.timeStart) {
+        console.error("Ошибка: timeStart не был установлен.");
+        return;
+    }
+
+    const elapsed_time = (timeEnd - appState.timeStart) / 1000;
+    const speed = appState.numberOfCharacters / (elapsed_time / 60);
 
     document.getElementById('time').textContent = `Время: ${elapsed_time.toFixed(1)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
@@ -188,8 +168,7 @@ function endSession(timeStart, numberOfCharacters) {
     document.getElementById('again').style.display = 'block';
     document.getElementById('back-to-menu').style.display = 'block';
 
-    console.log(elapsed_time, speed, username);
-    saveSessionData(timeStart, username, elapsed_time, speed, numberOfCharacters);
+    saveSessionData(appState.timeStart, username, elapsed_time, speed, appState.numberOfCharacters);
 }
 
 window.addEventListener('load', function () {
@@ -199,19 +178,29 @@ window.addEventListener('load', function () {
         document.getElementById('again').style.display = 'none';
         document.getElementById('back-to-menu').style.display = 'none';
         document.getElementById('input').value = '';
-        document.querySelector('.sample').innerHTML = '';
-
+        document.querySelector('.sample').style.display = 'block';
+        
+        // Лог для сброса состояния
+        console.log("Resetting app state");
+    
+        // Сброс значений в объекте состояния
+        appState.currentArrayIndex = 0;
+        appState.timeStart = null;
+        appState.numberOfCharacters = 0;
+    
+        const input = document.getElementById('input');
+        input.removeEventListener('keydown', handleInput); // Удаляем все обработчики
+    
         if (fullReset) {
             document.querySelector('.processing').style.display = 'none';
             document.querySelector('.preparation').style.display = 'block';
             document.getElementById('ready').style.display = 'block';
-        } else {
-            selectedDictionaryName = document.getElementById('prog-lang').value;
-            getCodeBlock(selectedDictionaryName).then(() => {
-                setupInputHandler();
-            });
+        } else { 
+            setupInputHandler();
         }
     }
+    
+     
     
     getLanguage();
 

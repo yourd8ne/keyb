@@ -23,7 +23,7 @@ class SessionController {
             echo json_encode(['status' => 'success']);
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+            echo json_encode(['message' => $e->getMessage()]);
         }
     }
 
@@ -34,7 +34,7 @@ class SessionController {
 
 $data = json_decode(file_get_contents('php://input'));
 
-if (!isset($data->attemptTime) || !isset($data->username) || !isset($data->selectedDict) || !isset($data->timeSpent) || !isset($data->speed)) || !isset($data->numberOfCharacters){
+if (!isset($data->attemptTime) || !isset($data->username) || !isset($data->selectedDict) || !isset($data->timeSpent) || !isset($data->speed) || !isset($data->numberOfCharacters)){
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
     exit();

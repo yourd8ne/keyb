@@ -28,8 +28,9 @@ if (isset($attempts['error'])) {
                 <th>Time</th>
                 <th>UserName</th>
                 <th>DictionaryName</th>
-                <th>inClass</th>
+                <th>InClass</th>
                 <th>Speed</th>
+                <th>NumberOfCharacters</th>
             </tr>
         </thead>
         <tbody>
@@ -42,6 +43,7 @@ if (isset($attempts['error'])) {
                         <td><?php echo htmlspecialchars($attempt['DictionaryName']); ?></td>
                         <td><?php echo htmlspecialchars($attempt['inClass']); ?></td>
                         <td><?php echo htmlspecialchars($attempt['Speed']); ?></td>
+                        <td><?php echo htmlspecialchars($attempt['numberOfCharacters']); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>

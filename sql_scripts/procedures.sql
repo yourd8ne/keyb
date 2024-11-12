@@ -101,7 +101,7 @@ BEGIN
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempt (Date, Time, idUser, idDict, inClass, Speed, NumberOfCharacters)
+    INSERT INTO Attempt (Date, Time, idUser, idDictionary, inClass, Speed, NumberOfCharacters)
     VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, numberOfCharacters);
 END //
 
@@ -115,13 +115,14 @@ BEGIN
         u.Login AS UserName,
         d.Name AS DictionaryName,
         a.inClass,
-        ROUND(a.Speed, 2) AS Speed
+        ROUND(a.Speed, 2) AS Speed,
+        a.numberOfCharacters
     FROM
         Attempt a
     JOIN
         Users u ON a.idUser = u.idUsers
     JOIN
-        Dictionaries d ON a.idDict = d.idDictionary;
+        Dictionaries d ON a.idDictionary = d.idDictionary;
 END //
 
 CREATE PROCEDURE insertCode(

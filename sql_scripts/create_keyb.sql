@@ -59,20 +59,20 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempt` (
   `Date` TIMESTAMP NOT NULL,
   `Time` TIME NOT NULL,
   `idUser` INT NOT NULL,
-  `idDict` INT NOT NULL,
+  `idDictionary` INT NOT NULL,
   `inClass` TINYINT NOT NULL,
   `Speed` DOUBLE NOT NULL,
   `NumberOfCharacters` INT NOT NULL,
   PRIMARY KEY (`idAttempt`),
   INDEX `id_user_idx` (`idUser` ASC),
-  INDEX `id_dictionary_idx` (`idDict` ASC),
+  INDEX `id_dictionary_idx` (`idDictionary` ASC),
   CONSTRAINT `id_user_fk`
     FOREIGN KEY (`idUser`)
     REFERENCES `KeyB`.`Users` (`idUsers`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `id_dictionary_fk`
-    FOREIGN KEY (`idDict`)
+    FOREIGN KEY (`idDictionary`)
     REFERENCES `KeyB`.`Dictionaries` (`idDictionary`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION
