@@ -108,21 +108,47 @@ function displayCodeSample(index) {
     hljs.highlightBlock(codeBlock.querySelector('code'));
 }
 
+function highlightErrors(correctText, userInput) {
+    let highlightedText = '';
+    for (let i = 0; i < correctText.length; i++) {
+        if (userInput[i] === correctText[i]) {
+            highlightedText += correctText[i]; // Правильный символ остается без изменений
+        } else {
+            highlightedText += `<span class="error">${correctText[i] || ' '}</span>`; // Подсвечиваем ошибочный символ или отсутствующий символ как пробел
+        }
+    }
+    document.getElementById('highlight').innerHTML = highlightedText;
+}
+
+// Очистка блока подсветки ошибок
+function clearHighlight() {
+    document.getElementById('highlight').style.display = 'none';
+    document.getElementById('highlight').innerHTML = '';
+}
+
+// Обновление подсветки
+function updateHighlight() {
+    const userInput = document.getElementById('input').value;
+    const currentText = textArray[appState.currentArrayIndex].code;
+    highlightErrors(currentText, userInput);
+}
+
+// Обработчик ввода
 function handleInput(event) {
     if (!appState.timeStart) {
         appState.timeStart = new Date();
     }
 
-    const currentText = textArray[appState.currentArrayIndex].code.replace(/\s+/g, '');
-    const userInput = event.target.value.replace(/\s+/g, '');
-
+    const currentText = textArray[appState.currentArrayIndex].code;
+    const userInput = event.target.value;
 
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
-        if (userInput === currentText) {
-            appState.numberOfCharacters += event.target.value.length;
+        
+        if (userInput.replace(/\s+/g, '') === currentText.replace(/\s+/g, '')) {
+            appState.numberOfCharacters += userInput.length;
             event.target.value = '';
+            clearHighlight();
 
             if (appState.currentArrayIndex < textArray.length - 1) {
                 appState.currentArrayIndex++;
@@ -131,8 +157,13 @@ function handleInput(event) {
                 endSession();
             }
         } else {
-            console.log("Incorrect input. Please try again.");
+            // Показать блок с подсветкой ошибок
+            document.getElementById('highlight').style.display = 'block';
+            highlightErrors(currentText, userInput);
         }
+    } else {
+        // Скрыть блок с ошибками при начале нового ввода
+        clearHighlight();
     }
 }
 

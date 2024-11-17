@@ -29,9 +29,12 @@ $controller->handleRequest();
         </div>
         <button id="ready">Готов</button>
         <div class="processing">
-            <div class="sample"><!--inert-->
+            <div class="sample" inert><!--inert-->
             </div>
-            <textarea type="text" id="input"></textarea>
+            <div class="typing-container">
+                <div id="highlight" class="highlight-area"></div>
+                <textarea id="input" oninput="updateHighlight()" rows="3"></textarea>
+            </div>
             <div class="output">
                 <div id="time"></div>
                 <div id="speed"></div>
@@ -46,7 +49,6 @@ $controller->handleRequest();
     </div>
     <?php if (isset($_SESSION['username'])): ?>
     <script>
-        // Передаем username в JavaScript
         const username = <?php echo json_encode($_SESSION['username']); ?>;
     </script>
     <?php endif; ?>
