@@ -119,11 +119,11 @@ function handleInput(event) {
 
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
+        console.log(`event.target.value: "${event.target.value}" | User Input: "${userInput}"`);
         if (userInput === currentText) {
             appState.numberOfCharacters += event.target.value.length;
             event.target.value = '';
-
+            //userInput = '';
             if (appState.currentArrayIndex < textArray.length - 1) {
                 appState.currentArrayIndex++;
                 displayCodeSample(appState.currentArrayIndex);

@@ -59,9 +59,9 @@ BEGIN
 END //
 
 -- Получение списка языков
-CREATE PROCEDURE getLang()
+CREATE PROCEDURE getDictionariesInfo()
 BEGIN
-    SELECT Name FROM Dictionaries;
+    SELECT Name, NumberOfCodes FROM Dictionaries;
 END //
 
 CREATE PROCEDURE saveSessionData(
