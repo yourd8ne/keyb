@@ -76,7 +76,8 @@ CREATE PROCEDURE saveSessionData(
     IN selectedDict VARCHAR(255),
     IN timeSpent DOUBLE,
     IN speed DOUBLE,
-    IN numberOfCharacters INT
+    IN dictNumberOfCharacters INT,
+    IN userNumberOfCharacters INT
 )
 BEGIN
     DECLARE userId INT;
@@ -107,8 +108,8 @@ BEGIN
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempt (Date, Time, idUser, idDictionary, inClass, Speed, NumberOfCharacters)
-    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, numberOfCharacters);
+    INSERT INTO Attempts (Date, Time, idUser, idDictionary, inClass, Speed, DictNumberOfCharacters, UserNumberOfCharacters)
+    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, dictNumberOfCharacters, userNumberOfCharacters);
 END //
 
 
