@@ -93,8 +93,8 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts_Codes` (
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_code`
-    FOREIGN KEY `idCode`
-    REFERENCES `KeyB`.`Dictionary_Codes` (`idCode`)
+    FOREIGN KEY (`idCode`)
+    REFERENCES `Dictionary_Codes` (`idCode`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=MyISAM;

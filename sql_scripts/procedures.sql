@@ -38,6 +38,7 @@ CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50), IN numberOfCodes INT)
 BEGIN
     DECLARE id_Dictionary INT;
     DECLARE id_Language INT;
+    
     IF numberOfCodes <= 0 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Invalid numberOfCodes value';
@@ -57,7 +58,7 @@ BEGIN
         JOIN Languages l ON l.idLanguage = id_Language
         WHERE dc.Dictionaries_idDictionary = id_Dictionary
         ORDER BY RAND()
-        LIMIT numberOfCharacters;
+        LIMIT numberOfCodes;
     ELSE
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Dictionary not found';
@@ -114,7 +115,7 @@ END //
 
 
 -- Получение всех попыток
-CREATE PROCEDURE getAttempt()
+CREATE PROCEDURE getAttempts()
 BEGIN
     SELECT
         a.Date,

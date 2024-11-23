@@ -48,8 +48,8 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCh
     });
 }
 
-function getLanguage() {
-    fetch('controllers/CodeController.php?action=getLanguages', {
+function getDictionariesInfo() {
+    fetch('controllers/CodeController.php?action=getDictionariesInfo', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -60,19 +60,20 @@ function getLanguage() {
         const select = document.getElementById('prog-lang');
         
         select.innerHTML = ''; 
-        data.forEach(language => {
-            const option = document.createElement('option');
-            option.value = language;
-            option.text = language;
-            select.appendChild(option);
-        });
+        console.log(data);
+        // data.forEach(language => {
+        //     const option = document.createElement('option');
+        //     option.value = language;
+        //     option.text = language;
+        //     select.appendChild(option);
+        // });
     })
     .catch(error => {
         console.error('Error:', error);
     });
 }
 
-function getCodeBlock(selectDictionaryName) {
+function getCodeBlocks(selectDictionaryName) {
     if (!selectDictionaryName) return Promise.reject('No dictionary selected');
 
     return fetch('controllers/CodeController.php', {
@@ -200,9 +201,7 @@ window.addEventListener('load', function () {
         }
     }
     
-     
-    
-    getLanguage();
+    getDictionariesInfo();
 
     document.getElementById('ready').addEventListener('click', function () {
         selectedDictionaryName = document.getElementById('prog-lang').value;
@@ -211,7 +210,7 @@ window.addEventListener('load', function () {
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
 
-        getCodeBlock(selectedDictionaryName).then(() => {
+        getCodeBlocks(selectedDictionaryName).then(() => {
             setupInputHandler();
         });
     });

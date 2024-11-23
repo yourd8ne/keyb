@@ -10,10 +10,10 @@ class CodeController {
         $this->model = new DatabaseModel();
     }
 
-    public function getCode($DictionaryName) {
+    public function getCodes($DictionaryName) {
         try {
             // Получаем результат из модели
-            $dataFromModel = $this->model->getCode($DictionaryName);
+            $dataFromModel = $this->model->getCodes($DictionaryName);
             
             if (!is_array($dataFromModel)) {
                 throw new Exception('Data returned from model is not an array');
@@ -39,9 +39,9 @@ class CodeController {
         }
     }
 
-    public function getLanguages() {
+    public function getDictionariesInfo() {
         try {
-            $data = $this->model->getLanguage();
+            $data = $this->model->getDictionariesInfo();
             echo json_encode($data);
         } catch (Exception $e) {
             echo json_encode(['error' => $e->getMessage()]);

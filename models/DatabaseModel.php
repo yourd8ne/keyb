@@ -17,9 +17,10 @@ class DatabaseModel {
         }
     }
 
-    public function getCode($dictionaryName) {
+    public function getCode($dictionaryName, $numberOfCodes) {
         $dictionaryName = $this->conn->real_escape_string($dictionaryName);
-        $sql = "CALL getCode('$dictionaryName')";
+        $numberOfCodes = $this->conn->real_escape_string($numberOfCodes);
+        $sql = "CALL getCode('$dictionaryName, $numberOfCodes')";
         
         $result = $this->conn->query($sql);
         
@@ -33,24 +34,25 @@ class DatabaseModel {
         return !empty($response) ? $response : null;
     }
 
-    public function getLanguage() {
-        $sql = "CALL getLang()";
+    public function getDictionariesInfo() {
+        $sql = "CALL getDictionariesInfo()";
 
         $res = $this->conn->query($sql);
 
         if ($res && $res->num_rows > 0) {
-            $languages = [];
+            $array = [];
             while ($row = $res->fetch_assoc()) {
-                $languages[] = $row['Name'];
+                $array[] = $row['Name'];
+                $array[] = $row['NumberOfCodes'];
             }
-            return $languages;
+            return $array;
         } else {
             return [];
         }
     }
 
-    public function getAttempt() {
-        $query = "CALL GetAttempt()";
+    public function getAttempts() {
+        $query = "CALL GetAttempts()";
         $result = $this->conn->query($query);
     
         if (!$result) {
@@ -60,7 +62,7 @@ class DatabaseModel {
         return $result;
     }       
 
-    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters) {
+    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters) {
         $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?, ?)");
         
         if (!$stmt) {
@@ -70,7 +72,7 @@ class DatabaseModel {
         // Для диагностики выводим параметры
         //error_log("Calling saveSessionData with parameters: $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters");
         
-        $stmt->bind_param("sssddi", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
+        $stmt->bind_param("sssddii", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters);
         
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);

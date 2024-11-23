@@ -16,14 +16,16 @@ class SessionController {
         $selectedDict = $data->selectedDict;
         $timeSpent = $data->timeSpent;
         $speed = $data->speed;
-        $numberOfCharacters = $data->numberOfCharacters;
+        $dictNumberOfCharacters = $data->dictNumberOfCharacters;
+        $userNumberOfCharacters = $data->userNumberOfCharacters;
 
         try {
-            $this->model->saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $numberOfCharacters);
+            $this->model->saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters);
             echo json_encode(['status' => 'success']);
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['message' => $e->getMessage()]);
+            error_log("Error saving session data: " . $e->getMessage());
+            echo json_encode(['message' => 'Internal Server Error']);
         }
     }
 
@@ -34,10 +36,13 @@ class SessionController {
 
 $data = json_decode(file_get_contents('php://input'));
 
-if (!isset($data->attemptTime) || !isset($data->username) || !isset($data->selectedDict) || !isset($data->timeSpent) || !isset($data->speed) || !isset($data->numberOfCharacters)){
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
-    exit();
+$requiredFields = ['attemptTime', 'username', 'selectedDict', 'timeSpent', 'speed', 'dictNumberOfCharacters', 'userNumberOfCharacters'];
+foreach ($requiredFields as $field) {
+    if (!isset($data->$field)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => "Missing required field: $field"]);
+        exit();
+    }
 }
 
 $controller = new SessionController();

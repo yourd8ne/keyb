@@ -11,7 +11,7 @@ class AttemptsController {
     public function getAttempts() {
         $data = [];
         try {
-            $result = $this->model->getAttempt(); // Получение данных
+            $result = $this->model->getAttempts(); // Получение данных
             
             // Проверяем, есть ли результаты
             if ($result) {
