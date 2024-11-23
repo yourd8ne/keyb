@@ -187,3 +187,38 @@ END //
 
 
 DELIMITER ;
+----
+-- Языки, словари, коды..
+insert into Languages (Name, HighlightName) values ('Python', 'python');
+insert into Languages (Name, HighlightName) values ('C++', 'cpp');
+
+
+
+insert into Dictionaries (Name, Languages_idLanguage, NumberOfCodes) values ('simplePythonClass', 1, 1);
+insert into Dictionaries (Name, Languages_idLanguage, NumberOfCodes) values ('baseCppCodes', 2, 10);
+
+
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (1, 'class Dog:\n  def __init__(self, name):\n    self.name = name\n  def bark(self):\n    print(f"{self.name} says woof!)');
+
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'int result = a + b * c;'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::vector<int> numbers = {1, 2, 3, 4, 5};');
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::cout << "Hello, world!" << std::endl;'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'for (int i = 0; i < 10; i++) std::cout << i << " ";'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'double area = 3.14 * radius * radius;'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::string name = "John";'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'if (x > y) std::swap(x, y);');
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'bool isEven = (num % 2 == 0);');
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::map<std::string, int> score;'); 
+
+insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'const int MAX_SIZE = 100;');
+
