@@ -18,21 +18,21 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCharacters) {
+function saveSessionData(fullAttemptTime, username, timeSpent, speed, dictNumberOfCharacters, userNumberOfCharacters) {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return;
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
-    console.log(attemptTime, timeSpent, username, speed, fullAttemptTime, numberOfCharacters);
     const data = {
         attemptTime: attemptTime,
         username: username,
         selectedDict: selectedDictionaryName,
         timeSpent: timeSpent,
         speed: speed,
-        numberOfCharacters: numberOfCharacters
+        dictNumberOfCharacters: dictNumberOfCharacters,
+        userNumberOfCharacters: userNumberOfCharacters  
     };
     console.log(data);
     fetch('controllers/SessionController.php', {
@@ -61,19 +61,21 @@ function getDictionariesInfo() {
         
         select.innerHTML = ''; 
         console.log(data);
-        // data.forEach(language => {
-        //     const option = document.createElement('option');
-        //     option.value = language;
-        //     option.text = language;
-        //     select.appendChild(option);
-        // });
+        // получаем количества кодов, мб тут сформировать то количество которое будем брать. Сохранить..глобально
+        
+        data.forEach(language => {
+            const option = document.createElement('option');
+            option.value = language;
+            option.text = language;
+            select.appendChild(option);
+        });
     })
     .catch(error => {
         console.error('Error:', error);
     });
 }
 
-function getCodeBlocks(selectDictionaryName) {
+function getCodes(selectDictionaryName) {
     if (!selectDictionaryName) return Promise.reject('No dictionary selected');
 
     return fetch('controllers/CodeController.php', {
@@ -209,8 +211,8 @@ window.addEventListener('load', function () {
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
-
-        getCodeBlocks(selectedDictionaryName).then(() => {
+        // хардкод нужного количества кодов
+        getCodes(selectedDictionaryName).then(() => {
             setupInputHandler();
         });
     });

@@ -65,7 +65,7 @@ BEGIN
     END IF;
 END //
 
--- Получение списка языков
+
 CREATE PROCEDURE getDictionariesInfo()
 BEGIN
     SELECT Name, NumberOfCodes FROM Dictionaries;

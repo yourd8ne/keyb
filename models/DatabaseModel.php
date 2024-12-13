@@ -17,23 +17,6 @@ class DatabaseModel {
         }
     }
 
-    public function getCode($dictionaryName, $numberOfCodes) {
-        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
-        $numberOfCodes = $this->conn->real_escape_string($numberOfCodes);
-        $sql = "CALL getCode('$dictionaryName, $numberOfCodes')";
-        
-        $result = $this->conn->query($sql);
-        
-        $response = [];
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $response[] = ['HighlightName' => $row['HighlightName'], 'Code' => $row['Code']];
-            }
-        }
-    
-        return !empty($response) ? $response : null;
-    }
-
     public function getDictionariesInfo() {
         $sql = "CALL getDictionariesInfo()";
 
@@ -49,6 +32,23 @@ class DatabaseModel {
         } else {
             return [];
         }
+    }
+    
+    public function getCodes($dictionaryName, $numberOfCodes) {
+        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
+        $numberOfCodes = $this->conn->real_escape_string($numberOfCodes);
+        $sql = "CALL getCode('$dictionaryName, $numberOfCodes')";
+        
+        $result = $this->conn->query($sql);
+        
+        $response = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $response[] = ['HighlightName' => $row['HighlightName'], 'Code' => $row['Code']];
+            }
+        }
+    
+        return !empty($response) ? $response : null;
     }
 
     public function getAttempts() {

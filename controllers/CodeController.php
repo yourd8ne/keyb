@@ -10,6 +10,31 @@ class CodeController {
         $this->model = new DatabaseModel();
     }
 
+    public function getDictionariesInfo() {
+        try {
+            $dataFromModel = $this->model->getDictionariesInfo();
+
+            $response = [];
+            foreach ($dataFromModel as $item) {
+                if (!is_array($item) || !isset($item['Name'], $item['NumberOfCodes'])) {
+                    throw new Exception('Invalid data format in model response');
+                }
+                $response = [
+                    'Name' => $item['Name'],
+                    'NumberOfCodes' => $item['NumberOfCodes']
+                ];
+                echo json_encode($response);
+            }
+        
+        } catch (Exception $e) {
+            //error_log('Error in getCode: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'error' => 'An error occurred while fetching code data'
+            ]);
+        }
+    }
+
     public function getCodes($DictionaryName) {
         try {
             // Получаем результат из модели
@@ -39,15 +64,6 @@ class CodeController {
         }
     }
 
-    public function getDictionariesInfo() {
-        try {
-            $data = $this->model->getDictionariesInfo();
-            echo json_encode($data);
-        } catch (Exception $e) {
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
     public function closeModelConnection() {
         if ($this->model) {
             $this->model->closeConnection();
@@ -60,15 +76,15 @@ $controller = new CodeController();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     if (isset($data['dictionaryName'])) {
-        $controller->getCode($data['dictionaryName']);
+        $controller->getCodes($data['dictionaryName']);
     } else {
         echo json_encode(['error' => 'DictionaryName parameter missing']);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['action'])) {
         switch ($_GET['action']) {
-            case 'getLanguages': 
-                $controller->getLanguages();
+            case 'getDictionariesInfo': 
+                $controller->getDictionariesInfo();
                 break;
             default:
                 echo json_encode(['error' => 'Invalid action']);
