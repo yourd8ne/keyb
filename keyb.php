@@ -12,7 +12,12 @@ $controller->handleRequest();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>keyb</title>
     <link rel="stylesheet" href="public/css/style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/monokai-sublime.min.css">
+    <!-- Подключаем стили -->
+    <link rel="stylesheet" href="highlight/styles/monokai-sublime.min.css">
+    <!-- Подключаем сам скрипт -->
+    <script src="highlight/highlight.min.js"></script>
+
+    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/monokai-sublime.min.css">-->
 </head>
 <body>
     <div class="container">
@@ -31,7 +36,8 @@ $controller->handleRequest();
         <div class="processing">
             <div class="sample"><!--inert-->
             </div>
-            <textarea type="text" id="input"></textarea>
+            <div id="input-container">
+            </div>
             <div class="output">
                 <div id="time"></div>
                 <div id="speed"></div>

@@ -1,5 +1,6 @@
 let textArray = [];
 let selectedDictionaryName = '';
+let numberOfCodes;
 
 const appState = {
     timeStart: null,
@@ -18,23 +19,25 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveSessionData(fullAttemptTime, username, timeSpent, speed, dictNumberOfCharacters, userNumberOfCharacters) {
+function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCharacters) {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return;
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
+    console.log(attemptTime, timeSpent, username, speed, fullAttemptTime, numberOfCharacters);
     const data = {
         attemptTime: attemptTime,
         username: username,
         selectedDict: selectedDictionaryName,
         timeSpent: timeSpent,
         speed: speed,
-        dictNumberOfCharacters: dictNumberOfCharacters,
-        userNumberOfCharacters: userNumberOfCharacters  
+        dictNumberOfCharacters: numberOfCharacters,
+        userNumberOfCharacters: textArray.length
     };
     console.log(data);
+    //нужно еще сохранять данные в Attempts_Codes
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {
@@ -48,26 +51,38 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed, dictNumber
     });
 }
 
-function getDictionariesInfo() {
+function getDictionaryInfo() {
     fetch('controllers/CodeController.php?action=getDictionariesInfo', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
+        if (data.error) {
+            console.error('Error:', data.error);
+            return;
+        }
+
         const select = document.getElementById('prog-lang');
-        
-        select.innerHTML = ''; 
-        console.log(data);
-        // получаем количества кодов, мб тут сформировать то количество которое будем брать. Сохранить..глобально
-        
+        if (!select) {
+            console.error('Element with id "prog-lang" not found');
+            return;
+        }
+        //console.log(data);
+        select.innerHTML = '';
         data.forEach(language => {
             const option = document.createElement('option');
-            option.value = language;
-            option.text = language;
+            option.value = language.Name;
+            option.text = language.Name;
             select.appendChild(option);
+            console.log(`Словарь ${language.Name}, количество всего сниппетов ${language.NumberOfCodes}`);
         });
     })
     .catch(error => {
@@ -75,40 +90,77 @@ function getDictionariesInfo() {
     });
 }
 
-function getCodes(selectDictionaryName) {
-    if (!selectDictionaryName) return Promise.reject('No dictionary selected');
+function getCodeBlock(selectDictionaryName, selectedNumberOfCodes) {
+    if (!selectDictionaryName || !selectedNumberOfCodes) return Promise.reject('No dictionary selected or number of codes not provided');
 
-    return fetch('controllers/CodeController.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ dictionaryName: selectDictionaryName }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) return Promise.reject(data.error);
+    // Тут можно что-то сделать с числом существующих кодов и с числом нужных пользователю 
 
-        const codeBlock = document.querySelector('.sample');
-        codeBlock.innerHTML = '';
+    return fetch('controllers/CodeController.php?action=getCodes&dictionaryName=' + encodeURIComponent(selectDictionaryName) + '&numberOfCodes=' + selectedNumberOfCodes)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) return Promise.reject(data.error);
 
-        textArray = data.map(item => ({
-            code: item.Code,
-            highlightName: item.HighlightName
-        }));
+            textArray = data.map(item => ({
+                code: item.Code,
+                highlightName: item.HighlightName
+            }));
 
-        return Promise.resolve();
-    })
-    .catch(error => Promise.reject(error));
+            const codeBlock = document.querySelector('.sample');
+            if (!codeBlock) return Promise.reject('Code block element not found');
+
+            codeBlock.innerHTML = ''; // Очистка предыдущего вывода
+
+            if (textArray.length === 1) {
+                // Если одна строка, выводим её как один блок с подсветкой
+                const pre = document.createElement('pre');
+                const code = document.createElement('code');
+                code.className = textArray[0].highlightName;
+                code.textContent = textArray[0].code;
+
+                pre.appendChild(code);
+                codeBlock.appendChild(pre);
+
+                hljs.highlightBlock(code);
+            } else {
+                // Если несколько строк, выводим каждую отдельно
+                textArray.forEach(item => {
+                    const div = document.createElement('div');
+                    const pre = document.createElement('pre');
+                    const code = document.createElement('code');
+                    code.className = item.highlightName;
+                    code.textContent = item.code;
+
+                    pre.appendChild(code);
+                    div.appendChild(pre);
+                    codeBlock.appendChild(div);
+
+                    hljs.highlightBlock(code);
+                });
+            }
+
+            return Promise.resolve();
+        })
+        .catch(error => {
+            console.error(error);
+            return Promise.reject(error);
+        });
 }
 
 function displayCodeSample(index) {
     const codeBlock = document.querySelector('.sample');
     const item = textArray[index];
-    console.log(`highlightName ${item.highlightName} - code ${item.code}`);
-    codeBlock.innerHTML = `<pre><code class="${item.highlightName}"></code></pre>`;
-    codeBlock.querySelector('code').textContent = item.code;
-    hljs.highlightBlock(codeBlock.querySelector('code'));
+    if (!item) return;
+
+    codeBlock.innerHTML = '';
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.className = item.highlightName;
+    code.textContent = item.code;
+
+    pre.appendChild(code);
+    codeBlock.appendChild(pre);
+
+    hljs.highlightBlock(code);
 }
 
 function handleInput(event) {
@@ -119,14 +171,17 @@ function handleInput(event) {
     const currentText = textArray[appState.currentArrayIndex].code.replace(/\s+/g, '');
     const userInput = event.target.value.replace(/\s+/g, '');
 
+    const inputElement = event.target;
+
+    inputElement.classList.remove('error', 'blink');
 
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        console.log(`event.target.value: "${event.target.value}" | User Input: "${userInput}"`);
+        console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
         if (userInput === currentText) {
             appState.numberOfCharacters += event.target.value.length;
             event.target.value = '';
-            //userInput = '';
+
             if (appState.currentArrayIndex < textArray.length - 1) {
                 appState.currentArrayIndex++;
                 displayCodeSample(appState.currentArrayIndex);
@@ -135,6 +190,8 @@ function handleInput(event) {
             }
         } else {
             console.log("Incorrect input. Please try again.");
+            inputElement.classList.add('error');
+            inputElement.classList.add('blink');
         }
     }
 }
@@ -146,7 +203,7 @@ function setupInputHandler() {
     displayCodeSample(appState.currentArrayIndex);
 
     // Убираем предыдущий обработчик, если он был установлен ранее
-    input.removeEventListener('keydown', handleInput); 
+    input.removeEventListener('keydown', handleInput);
     input.addEventListener('keydown', handleInput);
 }
 
@@ -182,37 +239,54 @@ window.addEventListener('load', function () {
         document.getElementById('back-to-menu').style.display = 'none';
         document.getElementById('input').value = '';
         document.querySelector('.sample').style.display = 'block';
-        
+
         // Лог для сброса состояния
         console.log("Resetting app state");
-    
+
         // Сброс значений в объекте состояния
         appState.currentArrayIndex = 0;
         appState.timeStart = null;
         appState.numberOfCharacters = 0;
-    
+
         const input = document.getElementById('input');
         input.removeEventListener('keydown', handleInput); // Удаляем все обработчики
-    
+
         if (fullReset) {
             document.querySelector('.processing').style.display = 'none';
             document.querySelector('.preparation').style.display = 'block';
             document.getElementById('ready').style.display = 'block';
-        } else { 
+            textArray = [];
+            selectedDictionaryName = '';
+            numberOfCodes = undefined;
+
+        } else {
             setupInputHandler();
         }
     }
-    
-    getDictionariesInfo();
+
+    getDictionaryInfo();
 
     document.getElementById('ready').addEventListener('click', function () {
         selectedDictionaryName = document.getElementById('prog-lang').value;
+        const selectedNumberOfCodes = 3;// Выбор запрашиваемого количества сниппетов
 
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
-        // хардкод нужного количества кодов
-        getCodes(selectedDictionaryName).then(() => {
+
+        getCodeBlock(selectedDictionaryName, selectedNumberOfCodes).then(() => {
+            const inputContainer = document.getElementById('input-container');
+
+            if (textArray.length > 1) {
+                const inputElement = document.createElement('input');
+                inputElement.type = 'text';
+                inputElement.id = 'input';
+                inputContainer.appendChild(inputElement);
+            } else {
+                const textareaElement = document.createElement('textarea');
+                textareaElement.id = 'input';
+                inputContainer.appendChild(textareaElement);
+            }
             setupInputHandler();
         });
     });
@@ -223,5 +297,6 @@ window.addEventListener('load', function () {
 
     document.getElementById('back-to-menu').addEventListener('click', function () {
         resetApp(true);
+        document.getElementById('input').remove();
     });
 });

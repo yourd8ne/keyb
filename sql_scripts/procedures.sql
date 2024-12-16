@@ -124,9 +124,10 @@ BEGIN
         d.Name AS DictionaryName,
         a.inClass,
         ROUND(a.Speed, 2) AS Speed,
-        a.numberOfCharacters
+        a.DictNumberOfCharacters,
+        a.UserNumberOfCharacters
     FROM
-        Attempt a
+        Attempts a
     JOIN
         Users u ON a.idUser = u.idUsers
     JOIN
@@ -187,38 +188,27 @@ END //
 
 
 DELIMITER ;
+
+DELIMITER //
 ----
 -- Языки, словари, коды..
-insert into Languages (Name, HighlightName) values ('Python', 'python');
-insert into Languages (Name, HighlightName) values ('C++', 'cpp');
+DELIMITER ;
 
+INSERT INTO Languages (Name, HighlightName) VALUES ('Python', 'python');
+INSERT INTO Languages (Name, HighlightName) VALUES ('C++', 'cpp');
 
+INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodes) VALUES ('simplePythonClass', 1, 1);
+INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodes) VALUES ('baseCppCodes', 2, 10);
 
-insert into Dictionaries (Name, Languages_idLanguage, NumberOfCodes) values ('simplePythonClass', 1, 1);
-insert into Dictionaries (Name, Languages_idLanguage, NumberOfCodes) values ('baseCppCodes', 2, 10);
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (1, 'class Dog:\n  def __init__(self, name):\n    self.name = name\n  def bark(self):\n    print(f"{self.name} says woof!")');
 
-
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (1, 'class Dog:\n  def __init__(self, name):\n    self.name = name\n  def bark(self):\n    print(f"{self.name} says woof!)');
-
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'int result = a + b * c;'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::vector<int> numbers = {1, 2, 3, 4, 5};');
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::cout << "Hello, world!" << std::endl;'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'for (int i = 0; i < 10; i++) std::cout << i << " ";'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'double area = 3.14 * radius * radius;'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::string name = "John";'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'if (x > y) std::swap(x, y);');
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'bool isEven = (num % 2 == 0);');
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'std::map<std::string, int> score;'); 
-
-insert into Dictionary_Codes (Dictionaries_idDictionary, Code) values (2, 'const int MAX_SIZE = 100;');
-
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'int result = a + b * c;');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::vector<int> numbers = {1, 2, 3, 4, 5};');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::cout << "Hello, world!" << std::endl;');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'for (int i = 0; i < 10; i++) std::cout << i << " ";');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'double area = 3.14 * radius * radius;');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::string name = "John";');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'if (x > y) std::swap(x, y);');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'bool isEven = (num % 2 == 0);');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::map<std::string, int> score;');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'const int MAX_SIZE = 100;');

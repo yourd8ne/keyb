@@ -159,3 +159,17 @@ input:focus, select:focus {
     width: 75%;
     margin-top: 10px;
 }
+
+.error {
+    border-color: red;
+}
+.blink {
+    animation: blink 1s 3; /* Мерцание 3 раза */
+}
+@keyframes blink {
+    0%, 100% { border-color: red; }
+    50% { border-color: transparent; }
+}
+.input-container {
+    position: relative;
+}
