@@ -4,7 +4,7 @@ let numberOfCodes;
 
 const appState = {
     timeStart: null,
-    numberOfCharacters: 0,
+    userNumberOfCharacters: 0,
     currentArrayIndex: 0,
 };
 
@@ -19,25 +19,27 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveSessionData(fullAttemptTime, username, timeSpent, speed, numberOfCharacters) {
+function saveSessionData(fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters) {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return;
     }
 
     let attemptTime = formatDateToMySQL(fullAttemptTime);
-    console.log(attemptTime, timeSpent, username, speed, fullAttemptTime, numberOfCharacters);
+    const codeIds = textArray.map(item => item.idCode);
     const data = {
         attemptTime: attemptTime,
         username: username,
         selectedDict: selectedDictionaryName,
         timeSpent: timeSpent,
         speed: speed,
-        dictNumberOfCharacters: numberOfCharacters,
-        userNumberOfCharacters: textArray.length
+        userNumberOfCharacters: userNumberOfCharacters,
+        userNumberOfSnippets: textArray.length,
+        idCodes: codeIds // Передаем массив ID кодов
     };
+
     console.log(data);
-    //нужно еще сохранять данные в Attempts_Codes
+
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {
@@ -82,7 +84,7 @@ function getDictionaryInfo() {
             option.value = language.Name;
             option.text = language.Name;
             select.appendChild(option);
-            console.log(`Словарь ${language.Name}, количество всего сниппетов ${language.NumberOfCodes}`);
+            //console.log(`Словарь ${language.Name}, количество всего сниппетов ${language.NumberOfCodes}`);
         });
     })
     .catch(error => {
@@ -101,9 +103,15 @@ function getCodeBlock(selectDictionaryName, selectedNumberOfCodes) {
             if (data.error) return Promise.reject(data.error);
 
             textArray = data.map(item => ({
+                idCode: item.idCode, // Добавляем idCode
                 code: item.Code,
                 highlightName: item.HighlightName
             }));
+            //console.log(textArray);
+            // Используем idCode при необходимости
+            // textArray.forEach(item => {
+            //     console.log(`idCode: ${item.idCode}, Code: ${item.code}`);
+            // });
 
             const codeBlock = document.querySelector('.sample');
             if (!codeBlock) return Promise.reject('Code block element not found');
@@ -177,9 +185,9 @@ function handleInput(event) {
 
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
+        //console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
         if (userInput === currentText) {
-            appState.numberOfCharacters += event.target.value.length;
+            appState.userNumberOfCharacters += event.target.value.length;
             event.target.value = '';
 
             if (appState.currentArrayIndex < textArray.length - 1) {
@@ -189,7 +197,7 @@ function handleInput(event) {
                 endSession();
             }
         } else {
-            console.log("Incorrect input. Please try again.");
+            //console.log("Incorrect input. Please try again.");
             inputElement.classList.add('error');
             inputElement.classList.add('blink');
         }
@@ -209,14 +217,14 @@ function setupInputHandler() {
 
 function endSession() {
     const timeEnd = new Date();
-    console.log(`timeStart endSession ${appState.timeStart}`);
+    //console.log(`timeStart endSession ${appState.timeStart}`);
     if (!appState.timeStart) {
         console.error("Ошибка: timeStart не был установлен.");
         return;
     }
 
     const elapsed_time = (timeEnd - appState.timeStart) / 1000;
-    const speed = appState.numberOfCharacters / (elapsed_time / 60);
+    const speed = appState.userNumberOfCharacters / (elapsed_time / 60);
 
     document.getElementById('time').textContent = `Время: ${elapsed_time.toFixed(1)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
@@ -228,7 +236,7 @@ function endSession() {
     document.getElementById('again').style.display = 'block';
     document.getElementById('back-to-menu').style.display = 'block';
 
-    saveSessionData(appState.timeStart, username, elapsed_time, speed, appState.numberOfCharacters);
+    saveSessionData(appState.timeStart, username, elapsed_time, speed, appState.userNumberOfCharacters);
 }
 
 window.addEventListener('load', function () {
@@ -241,12 +249,12 @@ window.addEventListener('load', function () {
         document.querySelector('.sample').style.display = 'block';
 
         // Лог для сброса состояния
-        console.log("Resetting app state");
+        //console.log("Resetting app state");
 
         // Сброс значений в объекте состояния
         appState.currentArrayIndex = 0;
         appState.timeStart = null;
-        appState.numberOfCharacters = 0;
+        appState.userNumberOfCharacters = 0;
 
         const input = document.getElementById('input');
         input.removeEventListener('keydown', handleInput); // Удаляем все обработчики

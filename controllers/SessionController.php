@@ -1,6 +1,4 @@
 <?php
-header('Content-Type: application/json');
-
 require_once '../models/DatabaseModel.php';
 
 class SessionController {
@@ -10,42 +8,50 @@ class SessionController {
         $this->model = new DatabaseModel();
     }
 
-    public function saveSessionData($data) {
-        $attemptTime = $data->attemptTime;
-        $username = $data->username;
-        $selectedDict = $data->selectedDict;
-        $timeSpent = $data->timeSpent;
-        $speed = $data->speed;
-        $dictNumberOfCharacters = $data->dictNumberOfCharacters;
-        $userNumberOfCharacters = $data->userNumberOfCharacters;
-
-        try {
-            $this->model->saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters);
-            echo json_encode(['status' => 'success']);
-        } catch (Exception $e) {
-            http_response_code(500);
-            error_log("Error saving session data: " . $e->getMessage());
-            echo json_encode(['message' => 'Internal Server Error']);
+    public function saveSessionData() {
+        $input = json_decode(file_get_contents('php://input'), true);
+    
+        // Проверка данных на наличие всех необходимых полей
+        if (!$input || !isset($input['attemptTime'], $input['username'], $input['selectedDict'], $input['timeSpent'], $input['speed'], $input['userNumberOfCharacters'], $input['userNumberOfSnippets'], $input['idCodes'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid input']);
+            return;
         }
-    }
-
-    public function closeModelConnection() {
-        $this->model->closeConnection();
-    }
-}
-
-$data = json_decode(file_get_contents('php://input'));
-
-$requiredFields = ['attemptTime', 'username', 'selectedDict', 'timeSpent', 'speed', 'dictNumberOfCharacters', 'userNumberOfCharacters'];
-foreach ($requiredFields as $field) {
-    if (!isset($data->$field)) {
-        http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => "Missing required field: $field"]);
-        exit();
+    
+        // Убедимся, что idCodes это массив строк
+        $idCodes = is_array($input['idCodes']) ? array_map('strval', $input['idCodes']) : [];
+    
+        try {
+            // Сохранение данных сессии
+            $idAttempts = $this->model->saveSessionData(
+                $input['attemptTime'],
+                $input['username'],
+                $input['selectedDict'],
+                $input['timeSpent'],
+                $input['speed'],
+                $input['userNumberOfCharacters'],
+                $input['userNumberOfSnippets']
+            );
+    
+            // Сохранение кодов для сессии
+            $this->model->saveCodeForSession(
+                $idAttempts,
+                $input['selectedDict'],
+                implode(',', $idCodes) // Преобразуем массив ID кодов в строку
+            );
+    
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            error_log('Error in saveSessionData: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
     }
 }
 
 $controller = new SessionController();
-$controller->saveSessionData($data);
-$controller->closeModelConnection();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller->saveSessionData();
+}
 ?>

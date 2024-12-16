@@ -42,21 +42,24 @@ class CodeController {
         try {
             // Получаем результат из модели
             $dataFromModel = $this->model->getCodes($dictionaryName, $numberOfCodes);
-
+    
             if (!is_array($dataFromModel)) {
                 throw new Exception('Data returned from model is not an array');
             }
-
+    
             $response = [];
             foreach ($dataFromModel as $item) {
-                if (!is_array($item) || !isset($item['HighlightName'], $item['Code'])) {
+                if (!is_array($item) || !isset($item['HighlightName'], $item['Code'], $item['idCode'])) {
                     throw new Exception('Invalid data format in model response');
                 }
                 $response[] = [
                     'HighlightName' => $item['HighlightName'],
-                    'Code' => $item['Code']
+                    'Code' => $item['Code'],
+                    'idCode' => $item['idCode']  // Добавляем idCode в ответ
                 ];
             }
+    
+            // Отправляем ответ в формате JSON
             echo json_encode($response);
         } catch (Exception $e) {
             error_log('Error in getCodes: ' . $e->getMessage());
@@ -65,7 +68,7 @@ class CodeController {
                 'error' => 'An error occurred while fetching code data'
             ]);
         }
-    }
+    }    
 
     public function closeModelConnection() {
         if ($this->model) {

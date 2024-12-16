@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts` (
   `idDictionary` INT NOT NULL,
   `inClass` TINYINT NOT NULL,
   `Speed` DOUBLE NOT NULL,
-  `DictNumberOfCharacters` INT NOT NULL,
   `UserNumberOfCharacters` INT NOT NULL,
+  `UserNumberOfSnippets` INT NOT NULL,
   PRIMARY KEY (`idAttempt`),
   CONSTRAINT `id_user_fk`
     FOREIGN KEY (`idUser`)

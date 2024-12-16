@@ -53,7 +53,7 @@ BEGIN
     -- Проверка, что словарь найден
     IF id_Dictionary IS NOT NULL THEN
         -- Нужно получить помимо кода и его хайлайтнейма, случайный набор из данных, где имя словаря совпадает с нашим
-        SELECT dc.Code, l.HighlightName
+        SELECT dc.Code, l.HighlightName, dc.idCode
         FROM Dictionary_Codes dc
         JOIN Languages l ON l.idLanguage = id_Language
         WHERE dc.Dictionaries_idDictionary = id_Dictionary
@@ -77,8 +77,8 @@ CREATE PROCEDURE saveSessionData(
     IN selectedDict VARCHAR(255),
     IN timeSpent DOUBLE,
     IN speed DOUBLE,
-    IN dictNumberOfCharacters INT,
-    IN userNumberOfCharacters INT
+    IN userNumberOfCharacters INT,
+    IN userNumberOfSnippets INT
 )
 BEGIN
     DECLARE userId INT;
@@ -109,8 +109,48 @@ BEGIN
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempts (Date, Time, idUser, idDictionary, inClass, Speed, DictNumberOfCharacters, UserNumberOfCharacters)
-    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, dictNumberOfCharacters, userNumberOfCharacters);
+    INSERT INTO Attempts (Date, Time, idUser, idDictionary, inClass, Speed, UserNumberOfCharacters, UserNumberOfSnippets)
+    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, userNumberOfCharacters, userNumberOfSnippets);
+END //
+
+CREATE PROCEDURE saveCodeForSession(
+    IN idAttempts INT,        -- ID попытки (получается из результата saveSessionData)
+    IN dictId INT,            -- ID словаря (получается из saveSessionData)
+    IN idCodes TEXT           -- Массив ID кодов (формат: '1,2,3') для вставки
+)
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE curCode INT;
+    DECLARE pos INT DEFAULT 1;
+    DECLARE codeLength INT;
+    
+    -- Получаем длину строки
+    SET codeLength = LENGTH(idCodes);
+    
+    -- Цикл для извлечения каждого кода
+    read_loop: LOOP
+        -- Находим позицию следующей запятой (или конца строки)
+        SET pos = LOCATE(',', idCodes);
+        
+        -- Если запятая найдена, извлекаем подстроку до нее
+        IF pos > 0 THEN
+            SET curCode = CAST(SUBSTRING(idCodes, 1, pos - 1) AS UNSIGNED);
+            SET idCodes = SUBSTRING(idCodes, pos + 1);
+        ELSE
+            -- Если запятая не найдена, значит, это последний код
+            SET curCode = CAST(idCodes AS UNSIGNED);
+            SET done = 1;
+        END IF;
+        
+        -- Вставка в таблицу Attempts_Codes для каждого кода
+        INSERT INTO Attempts_Codes (idAttempts, idDictionary, idCode)
+        VALUES (idAttempts, dictId, curCode);
+
+        -- Если строка заканчена, выходим из цикла
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+    END LOOP;
 END //
 
 
@@ -124,8 +164,8 @@ BEGIN
         d.Name AS DictionaryName,
         a.inClass,
         ROUND(a.Speed, 2) AS Speed,
-        a.DictNumberOfCharacters,
-        a.UserNumberOfCharacters
+        a.UserNumberOfCharacters,
+        a.UserNumberOfSnippets
     FROM
         Attempts a
     JOIN

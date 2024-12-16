@@ -39,19 +39,25 @@ class DatabaseModel {
     public function getCodes($dictionaryName, $numberOfCodes) {
         $dictionaryName = $this->conn->real_escape_string($dictionaryName);
         $numberOfCodes = intval($numberOfCodes); // Ensure it's an integer
+    
+        // Выполнение процедуры
         $sql = "CALL getCodes('$dictionaryName', $numberOfCodes)";
-
         $result = $this->conn->query($sql);
-
+    
         $response = [];
         if ($result) {
+            // Добавляем idCode в ответ
             while ($row = $result->fetch_assoc()) {
-                $response[] = ['HighlightName' => $row['HighlightName'], 'Code' => $row['Code']];
+                $response[] = [
+                    'HighlightName' => $row['HighlightName'],
+                    'Code' => $row['Code'],
+                    'idCode' => $row['idCode']  // Добавляем idCode
+                ];
             }
         }
-
+    
         return !empty($response) ? $response : null;
-    }
+    }    
 
     public function getAttempts() {
         $query = "CALL GetAttempts()";
@@ -64,19 +70,47 @@ class DatabaseModel {
         return $result;
     }
 
-    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters) {
+    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $userNumberOfCharacters, $userNumberOfSnippets) {
+    
+        // Подготовка запроса
         $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?, ?, ?)");
-
+        
         if (!$stmt) {
             throw new Exception("Не удалось подготовить запрос: " . $this->conn->error);
         }
-
-        $stmt->bind_param("sssddii", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $dictNumberOfCharacters, $userNumberOfCharacters);
-
+        
+        // Передаем параметры в bind_param
+        $stmt->bind_param("sssddii", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $userNumberOfCharacters, $userNumberOfSnippets);
+        
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);
         }
-
+        
+        // Получаем idAttempts (последняя вставленная попытка)
+        $stmt = $this->conn->prepare("SELECT LAST_INSERT_ID()");
+        $stmt->execute();
+        $stmt->bind_result($idAttempts);
+        $stmt->fetch();
+        $stmt->close();
+        
+        return $idAttempts;
+    }
+    
+    public function saveCodeForSession($idAttempts, $dictId, $idCodes) {
+        // Подготовка запроса для сохранения кодов
+        $stmt = $this->conn->prepare("CALL saveCodeForSession(?, ?, ?)");
+        
+        if (!$stmt) {
+            throw new Exception("Не удалось подготовить запрос: " . $this->conn->error);
+        }
+        
+        // Убедитесь, что idCodes — это строка
+        $stmt->bind_param("iis", $idAttempts, $dictId, $idCodes);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Ошибка выполнения запроса: " . $stmt->error);
+        }
+        
         $stmt->close();
     }
 
