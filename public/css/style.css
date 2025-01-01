@@ -1,34 +1,32 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #323232;
+    background-color: #f9f9f9; /* Светлый фон */
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    color: #ccc;
+    color: #333; /* Темный текст */
 }
 
 .container {
-    background-color: #23241f;
+    background-color: #ffffff; /* Белый фон для контейнера */
     border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     padding: 40px;
     width: 700px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    /* align-items: center; */
 }
 
 h2 {
-    color: #ddd;
+    color: #222; /* Темный заголовок */
     text-align: center;
     margin-bottom: 20px;
 }
 
- 
 .preparation {
     margin-bottom: 20px;
 }
@@ -38,60 +36,48 @@ h2 {
     display: none;
 }
 
-.sample, #input {
-    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт */
-    font-size: 16px; /* Одинаковый размер шрифта */
-    line-height: 1; /* Точное выравнивание между строками */
-    padding: 0; /* Убираем отступы */
-    margin: 0; /* Убираем внешние отступы */
+.sample {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 8px 12px;
+    margin: 0;
     box-sizing: border-box;
     width: 100%;
-    background-color: #23241f;
-    color: #ccc;
-    display: inline-block; /* Сжимаем блок по содержимому */
-    letter-spacing: normal;
+    background-color: #ffffff; /* Светлый фон для ввода */
+    /* color: #333; Темный текст */
+    /* border: 1px solid #ddd; Светлая рамка */
+    /* border-radius: 2px; */
 }
 
 #input {
-    border: 1px solid #555; /* Рамка для input */
-    padding: 2px 12px; /* Небольшие отступы внутри input */
-    height: auto; /* Высота по контенту */
-    outline: none; /* Убираем выделение */
-}
-
-.sample {
-    border: 2px solid transparent; /* Прозрачная граница для выравнивания */
-    display: inline-block; /* Сжимаем блок по содержимому */
-}
-
-.container {
-    display: inline-block; /* Контейнер для плотного выравнивания */
-    text-align: left;
-}
-
-input, select {
-    width: 100%;
-    padding: 6px;
-    margin: 5px 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 8px 12px;
+    margin: 0;
     box-sizing: border-box;
-    border: 2px solid #555;
-    border-radius: 4px;
-    background-color: #23241f;
-    color: #ccc;
-    outline: none;
-    box-shadow: 0 0 0 1px #555;
+    width: 100%;
+    background-color: #ffffff; /* Светлый фон для ввода */
+    /* color: #333; Темный текст */
+    border: 1px solid #ddd; /* Светлая рамка */
+    border-radius: 2px;
 }
 
-
-input:focus, select:focus {
+#input {
     outline: none;
-    box-shadow: 0 0 0 1px #555;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#input:focus {
+    border-color: #85b7d9; /* Синий акцент */
+    box-shadow: 0 0 3px #85b7d9;
 }
 
 .button-login, .button-register, #ready {
-    background-color: #4caf50;
+    background-color: #2185d0; /* Синий акцент Semantic UI */
     color: white;
-    padding: 10px 20px;
+    padding: 10px 5px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -99,10 +85,11 @@ input:focus, select:focus {
     width: 100%;
     text-align: center;
     margin-top: 10px;
+    transition: background-color 0.3s;
 }
 
 #again, #back-to-menu {
-    background-color: #4caf50;
+    background-color: #2185d0;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -113,22 +100,46 @@ input:focus, select:focus {
     display: none;
 }
 
-.button-login:hover, .button-register:hover, #ready:hover, #again:hover, #back-to-menu:hover{
-    background-color: #45a049;
+#attempts_button {
+    background-color: #2185d0; /* Синий акцент Semantic UI */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    width: auto;
+    text-align: center;
+    margin: 0 0 20px auto;
+    text-decoration: none;
 }
 
-.form-group {
-    margin-bottom: 20px;
+.button-login:hover, .button-register:hover, #ready:hover {
+    background-color: #1678c2; /* Темно-синий акцент */
 }
 
-.form-group:last-child {
-    margin-bottom: 0;
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: #85b7d9; /* Синий акцент */
+    box-shadow: 0 0 3px #85b7d9;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #bbb;
+    color: #555; /* Темный текст */
 }
 
 .switch-form {
@@ -137,7 +148,7 @@ input:focus, select:focus {
 }
 
 .switch-form a {
-    color: #4caf50;
+    color: #2185d0; /* Синий акцент */
     text-decoration: none;
 }
 
@@ -149,7 +160,7 @@ input:focus, select:focus {
     margin-top: 20px;
     display: flex;
     justify-content: flex-start;
-    color: #bbb;
+    color: #555; /* Темный текст */
     align-content: stretch;
     align-items: flex-end;
     flex-direction: column;
@@ -160,16 +171,6 @@ input:focus, select:focus {
     margin-top: 10px;
 }
 
-.error {
-    border-color: red;
-}
-.blink {
-    animation: blink 1s 3; /* Мерцание 3 раза */
-}
-@keyframes blink {
-    0%, 100% { border-color: red; }
-    50% { border-color: transparent; }
-}
-.input-container {
-    position: relative;
+#input.error {
+    border: 2px solid #db2828; /* Красный Semantic UI */
 }

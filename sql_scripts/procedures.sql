@@ -226,6 +226,11 @@ BEGIN
     VALUES (dictId, codeText);
 END //
 
+CREATE PROCEDURE getNumberOfCodes()
+BEGIN
+SELECT Value FROM GlobalSettings WHERE SettingName = 'NumberOfCodes';
+END //
+
 
 DELIMITER ;
 
@@ -233,6 +238,11 @@ DELIMITER //
 ----
 -- Языки, словари, коды..
 DELIMITER ;
+
+INSERT INTO GlobalSettings (`SettingName`, `Value`)
+VALUES ('NumberOfCodes', 3);
+
+UPDATE GlobalSettings SET `Value` = 4 WHERE `SettingName` = 'NumberOfCodes';
 
 INSERT INTO Languages (Name, HighlightName) VALUES ('Python', 'python');
 INSERT INTO Languages (Name, HighlightName) VALUES ('C++', 'cpp');

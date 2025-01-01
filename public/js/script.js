@@ -6,6 +6,8 @@ const appState = {
     timeStart: null,
     userNumberOfCharacters: 0,
     currentArrayIndex: 0,
+    // numberOfCodes: undefined,
+    numberOfChars: undefined
 };
 
 function formatDateToMySQL(date) {
@@ -37,8 +39,6 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed, userNumber
         userNumberOfSnippets: textArray.length,
         idCodes: codeIds // Передаем массив ID кодов
     };
-
-    console.log(data);
 
     fetch('controllers/SessionController.php', {
         method: 'POST',
@@ -77,14 +77,14 @@ function getDictionaryInfo() {
             console.error('Element with id "prog-lang" not found');
             return;
         }
-        //console.log(data);
+        
         select.innerHTML = '';
         data.forEach(language => {
             const option = document.createElement('option');
             option.value = language.Name;
             option.text = language.Name;
             select.appendChild(option);
-            //console.log(`Словарь ${language.Name}, количество всего сниппетов ${language.NumberOfCodes}`);
+            
         });
     })
     .catch(error => {
@@ -92,32 +92,52 @@ function getDictionaryInfo() {
     });
 }
 
-function getCodeBlock(selectDictionaryName, selectedNumberOfCodes) {
-    if (!selectDictionaryName || !selectedNumberOfCodes) return Promise.reject('No dictionary selected or number of codes not provided');
+function getNumberOfCodes() {
+    fetch('controllers/CodeController.php?action=getNumberOfCodes', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            console.error('Error:', data.error);
+            return;
+        }
+        // console.log(data.NumberOfCodes);
+        numberOfCodes = data.NumberOfCodes;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
-    // Тут можно что-то сделать с числом существующих кодов и с числом нужных пользователю 
+function getCodeBlock(selectDictionaryName, numberOfCodes) {
+    if (!selectDictionaryName || !numberOfCodes) return Promise.reject('No dictionary selected or number of codes not provided');
 
-    return fetch('controllers/CodeController.php?action=getCodes&dictionaryName=' + encodeURIComponent(selectDictionaryName) + '&numberOfCodes=' + selectedNumberOfCodes)
+    return fetch('controllers/CodeController.php?action=getCodes&dictionaryName=' + encodeURIComponent(selectDictionaryName) + '&numberOfCodes=' + numberOfCodes)
         .then(response => response.json())
         .then(data => {
             if (data.error) return Promise.reject(data.error);
 
             textArray = data.map(item => ({
-                idCode: item.idCode, // Добавляем idCode
+                idCode: item.idCode,
                 code: item.Code,
                 highlightName: item.HighlightName
             }));
-            //console.log(textArray);
-            // Используем idCode при необходимости
-            // textArray.forEach(item => {
-            //     console.log(`idCode: ${item.idCode}, Code: ${item.code}`);
-            // });
 
             const codeBlock = document.querySelector('.sample');
             if (!codeBlock) return Promise.reject('Code block element not found');
 
-            codeBlock.innerHTML = ''; // Очистка предыдущего вывода
-
+            codeBlock.innerHTML = '';
+            //appState.numberOfCodes = textArray.length;
+            appState.numberOfChars = textArray.reduce((total, item) => total + item.code.length, 0);
             if (textArray.length === 1) {
                 // Если одна строка, выводим её как один блок с подсветкой
                 const pre = document.createElement('pre');
@@ -176,18 +196,17 @@ function handleInput(event) {
         appState.timeStart = new Date();
     }
 
-    const currentText = textArray[appState.currentArrayIndex].code.replace(/\s+/g, '');
-    const userInput = event.target.value.replace(/\s+/g, '');
+    const currentText = textArray[appState.currentArrayIndex].code;
+    const userInput = event.target.value;
 
-    const inputElement = event.target;
+    const inputElement = document.getElementById('input');
 
-    inputElement.classList.remove('error', 'blink');
+    inputElement.classList.remove('error');
 
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && event.shiftKey) {
         event.preventDefault();
-        //console.log(`Current Text: "${currentText}" | User Input: "${userInput}"`);
         if (userInput === currentText) {
-            appState.userNumberOfCharacters += event.target.value.length;
+            appState.userNumberOfCharacters += userInput.length;
             event.target.value = '';
 
             if (appState.currentArrayIndex < textArray.length - 1) {
@@ -197,9 +216,8 @@ function handleInput(event) {
                 endSession();
             }
         } else {
-            //console.log("Incorrect input. Please try again.");
+            console.log('abiba');
             inputElement.classList.add('error');
-            inputElement.classList.add('blink');
         }
     }
 }
@@ -210,22 +228,31 @@ function setupInputHandler() {
 
     displayCodeSample(appState.currentArrayIndex);
 
-    // Убираем предыдущий обработчик, если он был установлен ранее
     input.removeEventListener('keydown', handleInput);
     input.addEventListener('keydown', handleInput);
 }
 
 function endSession() {
     const timeEnd = new Date();
-    //console.log(`timeStart endSession ${appState.timeStart}`);
+
     if (!appState.timeStart) {
         console.error("Ошибка: timeStart не был установлен.");
         return;
     }
 
     const elapsed_time = (timeEnd - appState.timeStart) / 1000;
-    const speed = appState.userNumberOfCharacters / (elapsed_time / 60);
+    let charCountArray = textArray.map(function(item) {
+        return item.code.length;
+    });
+    
+    let totalCharCount = charCountArray.reduce(function(accumulator, currentValue) {
+        return accumulator + currentValue;
+    }, 0);
 
+    const speed = totalCharCount / (elapsed_time / 60);
+
+    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfCodes}`;
+    document.getElementById('numberOfChars').textContent = `Количество символов из словаря: ${appState.numberOfChars}`
     document.getElementById('time').textContent = `Время: ${elapsed_time.toFixed(1)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
     document.getElementById('time').style.display = 'block';
@@ -240,24 +267,27 @@ function endSession() {
 }
 
 window.addEventListener('load', function () {
+    //const numberOfCodes = 3; // Выбор запрашиваемого количества сниппетов
+    getNumberOfCodes();
+    
     function resetApp(fullReset = false) {
         document.getElementById('time').style.display = 'none';
         document.getElementById('speed').style.display = 'none';
+        document.getElementById('numberOfChars').style.display = 'none';
+        document.getElementById('numberOfCodes').style.display = 'none';
         document.getElementById('again').style.display = 'none';
         document.getElementById('back-to-menu').style.display = 'none';
         document.getElementById('input').value = '';
         document.querySelector('.sample').style.display = 'block';
 
-        // Лог для сброса состояния
-        //console.log("Resetting app state");
-
         // Сброс значений в объекте состояния
         appState.currentArrayIndex = 0;
         appState.timeStart = null;
         appState.userNumberOfCharacters = 0;
+        appState.numberOfChars = undefined;
 
         const input = document.getElementById('input');
-        input.removeEventListener('keydown', handleInput); // Удаляем все обработчики
+        input.removeEventListener('keydown', handleInput);
 
         if (fullReset) {
             document.querySelector('.processing').style.display = 'none';
@@ -265,7 +295,6 @@ window.addEventListener('load', function () {
             document.getElementById('ready').style.display = 'block';
             textArray = [];
             selectedDictionaryName = '';
-            numberOfCodes = undefined;
 
         } else {
             setupInputHandler();
@@ -276,13 +305,12 @@ window.addEventListener('load', function () {
 
     document.getElementById('ready').addEventListener('click', function () {
         selectedDictionaryName = document.getElementById('prog-lang').value;
-        const selectedNumberOfCodes = 3;// Выбор запрашиваемого количества сниппетов
 
         document.querySelector('.processing').style.display = 'block';
         document.querySelector('.preparation').style.display = 'none';
         document.getElementById('ready').style.display = 'none';
-
-        getCodeBlock(selectedDictionaryName, selectedNumberOfCodes).then(() => {
+        console.log(numberOfCodes);
+        getCodeBlock(selectedDictionaryName, numberOfCodes).then(() => {
             const inputContainer = document.getElementById('input-container');
 
             if (textArray.length > 1) {

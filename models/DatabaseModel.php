@@ -17,6 +17,18 @@ class DatabaseModel {
         }
     }
 
+    public function getNumberOfCodes() {
+        $sql = "CALL getNumberOfCodes;";
+
+        $res = $this->conn->query($sql);
+        
+        if ($res && $row = $res->fetch_assoc()) {
+            return (int)$row['Value'];
+        } else {
+            return 0;
+        }
+    }
+
     public function getDictionariesInfo() {
         $sql = "CALL getDictionariesInfo()";
 
