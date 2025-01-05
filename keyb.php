@@ -30,7 +30,7 @@ $controller->handleRequest();
         </div>
         <button id="ready">Готов</button>
         <div class="processing">
-            <div class="sample" inert>
+            <div class="sample" inert><!--  inert -->
             </div>
             <div id="input-container">
             </div>

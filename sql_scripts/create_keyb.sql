@@ -78,10 +78,12 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts` (
 ) ENGINE=MyISAM;
 
 CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts_Codes` (
+  `id` INT NOT NULL AUTO_INCREMENT,
   `idAttempts` INT NOT NULL,
   `idDictionary` INT NOT NULL,
   `idCode` INT NOT NULL,
-  PRIMARY KEY (`idAttempts`, `idCode`),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_attempts_code` (`idAttempts`, `idCode`),
   CONSTRAINT `fk_attempts`
     FOREIGN KEY (`idAttempts`)
     REFERENCES `Attempts` (`idAttempt`)

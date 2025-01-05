@@ -65,6 +65,12 @@ BEGIN
     END IF;
 END //
 
+CREATE PROCEDURE getDictionaryIdByName(
+    IN p_selectedDict VARCHAR(255)
+)
+BEGIN
+    SELECT idDictionary FROM Dictionaries WHERE name = p_selectedDict;
+END //
 
 CREATE PROCEDURE getDictionariesInfo()
 BEGIN
@@ -182,10 +188,10 @@ END //
 
 DELIMITER ;
 
-DELIMITER //
 ----
 -- Языки, словари, коды..
-DELIMITER ;
+DELIMITER //
+
 
 INSERT INTO GlobalSettings (`SettingName`, `Value`)
 VALUES ('NumberOfCodes', 3);
@@ -210,3 +216,5 @@ INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'if (x
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'bool isEven = (num % 2 == 0);');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::map<std::string, int> score;');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'const int MAX_SIZE = 100;');
+//
+DELIMITER ;

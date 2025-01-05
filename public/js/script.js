@@ -26,7 +26,7 @@ function saveSessionData(fullAttemptTime, username, timeSpent, speed, userNumber
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return;
     }
-
+    console.log(selectedDictionaryName);
     let attemptTime = formatDateToMySQL(fullAttemptTime);
     const codeIds = textArray.map(item => item.idCode);
     const data = {

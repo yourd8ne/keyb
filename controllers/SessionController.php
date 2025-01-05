@@ -32,11 +32,14 @@ class SessionController {
                 $input['userNumberOfCharacters'],
                 $input['userNumberOfSnippets']
             );
-    
+
+            // Получение идентификатора словаря по названию
+            $idDictionary = $this->model->getDictionaryIdByName($input['selectedDict']);
+
             // Сохранение кодов для сессии
             $this->model->saveCodeForSession(
                 $idAttempts,
-                $input['selectedDict'],
+                $idDictionary,
                 implode(',', $idCodes) // Преобразуем массив ID кодов в строку
             );
     

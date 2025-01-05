@@ -48,6 +48,18 @@ class DatabaseModel {
         }
     }
 
+    public function getDictionaryIdByName($selectedDict) {
+        // Вызов хранимой процедуры для получения идентификатора словаря по названию
+        $stmt = $this->conn->prepare("CALL GetDictionaryIdByName(?)");
+        $stmt->bind_param("s", $selectedDict);
+        $stmt->execute();
+
+        // Получение результата
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return $row ? $row['idDictionary'] : null;
+    }
+
     public function getCodes($dictionaryName, $numberOfCodes) {
         $dictionaryName = $this->conn->real_escape_string($dictionaryName);
         $numberOfCodes = intval($numberOfCodes); // Ensure it's an integer
