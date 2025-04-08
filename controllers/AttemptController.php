@@ -8,22 +8,53 @@ class AttemptsController {
         $this->model = new DatabaseModel();
     }
 
-    public function getAttempts() {
-        $data = [];
+    public function getUserStats($userId) {
         try {
-            $result = $this->model->getAttempts(); // Получение данных
+            $stats = $this->model->getUserStats($userId);
             
-            // Проверяем, есть ли результаты
+            if (isset($stats['error'])) {
+                return $stats;
+            }
+            
+            // Форматируем данные для удобного отображения
+            return [
+                'attempts_count' => $stats['attempts_count'],
+                'speed' => [
+                    'mean' => round($stats['mean_speed'], 2),
+                    'max' => $stats['max_speed'],
+                    'median' => round($stats['median_speed'], 2),
+                    'percentile_95' => round($stats['percentile_95'], 2),
+                    'quartile_3' => round($stats['quartile_3'], 2)
+                ],
+                'chars_avg' => round($stats['avg_chars']),
+                'snippets_avg' => round($stats['avg_snippets']),
+                'in_class_ratio' => round(($stats['in_class_count'] / $stats['attempts_count']) * 100, 1)
+            ];
+        } catch (Exception $e) {
+            error_log('Error in getUserStats: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function getAttempts() {
+        try {
+            $result = $this->model->getAttempts();
+            $data = [];
+            
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
+                    // Проверяем наличие обязательных полей
+                    if (!isset($row['idUser'])) {
+                        throw new Exception("Отсутствует idUser в данных попытки");
+                    }
                     $data[] = $row;
                 }
             }
-            error_log(print_r($data, true)); // Логируем данные в виде строки
-            return $data; // Возвращаем данные
+            
+            return $data;
         } catch (Exception $e) {
-            error_log('Error fetching attempts: ' . $e->getMessage()); // Логируем ошибку
-            return ['error' => $e->getMessage()]; // Возврат ошибки
+            error_log('Error in getAttempts: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
         }
     }
     

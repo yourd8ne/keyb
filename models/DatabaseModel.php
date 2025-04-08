@@ -17,6 +17,25 @@ class DatabaseModel {
         }
     }
 
+    public function getUserStats($userId) {
+        try {
+            $stmt = $this->conn->prepare("CALL GetUserStats(?)");
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            
+            $result = $stmt->get_result();
+            
+            if ($result && $result->num_rows > 0) {
+                return $result->fetch_assoc();
+            } else {
+                return ['error' => 'No data available for this user'];
+            }
+        } catch (Exception $e) {
+            error_log('Error getting user stats: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
+        }
+    }
+    
     public function getNumberOfCodes() {
         $sql = "CALL getNumberOfCodes;";
 

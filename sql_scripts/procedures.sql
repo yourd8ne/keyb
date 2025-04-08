@@ -164,6 +164,7 @@ END //
 CREATE PROCEDURE getAttempts()
 BEGIN
     SELECT
+        a.idUser,
         a.Date,
         a.Time,
         u.Login AS UserName,
@@ -180,11 +181,81 @@ BEGIN
         Dictionaries d ON a.idDictionary = d.idDictionary;
 END //
 
+
 CREATE PROCEDURE getNumberOfCodes()
 BEGIN
 SELECT Value FROM GlobalSettings WHERE SettingName = 'NumberOfCodes';
 END //
 
+
+CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
+BEGIN
+    DECLARE user_exists INT;
+    
+    -- Проверяем существование пользователя
+    SELECT COUNT(*) INTO user_exists FROM Users WHERE idUsers = p_user_id;
+    
+    IF user_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
+    ELSE
+        -- Основной запрос для расчёта статистики
+        SELECT 
+            COUNT(*) AS attempts_count,
+            AVG(Speed) AS mean_speed,
+            MAX(Speed) AS max_speed,
+            
+            -- Медиана (50-й перцентиль)
+            (
+                SELECT SUBSTRING_INDEX(
+                    SUBSTRING_INDEX(
+                        GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
+                        ',',
+                        CEIL(COUNT(*) * 0.5)  -- ✅ Исправлено: CEIL() с правильными скобками
+                    ),
+                    ',',
+                    -1
+                )
+                FROM Attempts
+                WHERE idUser = p_user_id
+            ) AS median_speed,
+            
+            -- 95-й перцентиль
+            (
+                SELECT SUBSTRING_INDEX(
+                    SUBSTRING_INDEX(
+                        GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
+                        ',',
+                        CEIL(COUNT(*) * 0.95)  -- ✅ Исправлено
+                    ),
+                    ',',
+                    -1
+                )
+                FROM Attempts
+                WHERE idUser = p_user_id
+            ) AS percentile_95,
+            
+            -- 3-й квартиль (75-й перцентиль)
+            (
+                SELECT SUBSTRING_INDEX(
+                    SUBSTRING_INDEX(
+                        GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
+                        ',',
+                        CEIL(COUNT(*) * 0.75)  -- ✅ Исправлено
+                    ),
+                    ',',
+                    -1
+                )
+                FROM Attempts
+                WHERE idUser = p_user_id
+            ) AS quartile_3,
+            
+            AVG(UserNumberOfCharacters) AS avg_chars,
+            AVG(UserNumberOfSnippets) AS avg_snippets,
+            SUM(CASE WHEN inClass = 1 THEN 1 ELSE 0 END) AS in_class_count
+        FROM Attempts
+        WHERE idUser = p_user_id;
+    END IF;
+END //
 
 DELIMITER ;
 
