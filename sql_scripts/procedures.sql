@@ -210,7 +210,7 @@ BEGIN
                     SUBSTRING_INDEX(
                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
                         ',',
-                        CEIL(COUNT(*) * 0.5)  -- ✅ Исправлено: CEIL() с правильными скобками
+                        CEIL(COUNT(*) * 0.5)
                     ),
                     ',',
                     -1
@@ -225,7 +225,7 @@ BEGIN
                     SUBSTRING_INDEX(
                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
                         ',',
-                        CEIL(COUNT(*) * 0.95)  -- ✅ Исправлено
+                        CEIL(COUNT(*) * 0.95)
                     ),
                     ',',
                     -1
@@ -240,7 +240,7 @@ BEGIN
                     SUBSTRING_INDEX(
                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
                         ',',
-                        CEIL(COUNT(*) * 0.75)  -- ✅ Исправлено
+                        CEIL(COUNT(*) * 0.75)
                     ),
                     ',',
                     -1
