@@ -1,5 +1,5 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif; /* Новый шрифт */
     background-color: #f9f9f9; /* Светлый фон */
     margin: 0;
     padding: 0;
@@ -37,41 +37,47 @@ h2 {
 }
 
 .sample {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Roboto Mono', monospace; /* Новый шрифт для кода */
     font-size: 16px;
     line-height: 1.5;
     padding: 8px 12px;
-    margin: 0;
+    margin: 0 0 10px 20px; /* Смещение вправо */
+    width: calc(100% - 40px); /* Учитываем смещение */
+    max-width: 100%;
+    background: #ffffff; /* Светлый фон */
+    border: none; /* Убираем рамку */
+    border-radius: 0; /* Убираем скругление */
     box-sizing: border-box;
-    width: 100%;
-    background-color: #ffffff; /* Светлый фон для ввода */
-    /* color: #333; Темный текст */
-    /* border: 1px solid #ddd; Светлая рамка */
-    /* border-radius: 2px; */
 }
 
-#input {
-    font-family: 'Courier New', Courier, monospace;
+.sample pre, .sample code {
+    font-family: 'Roboto Mono', monospace; /* Новый шрифт для кода */
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+#input, textarea {
+    font-family: 'Roboto Mono', monospace; /* Новый шрифт для ввода */
     font-size: 16px;
     line-height: 1.5;
     padding: 8px 12px;
-    margin: 0;
+    margin: 0 0 10px 20px; /* Смещение вправо */
     box-sizing: border-box;
-    width: 100%;
-    background-color: #ffffff; /* Светлый фон для ввода */
-    /* color: #333; Темный текст */
-    border: 1px solid #ddd; /* Светлая рамка */
-    border-radius: 2px;
+    width: calc(100% - 40px); /* Учитываем смещение */
+    background-color: #ffffff; /* Светлый фон */
+    border: 1px solid #ddd; /* Лёгкая рамка */
+    border-radius: 4px; /* Небольшое скругление */
+    outline: none; /* Убираем обводку */
+    resize: none; /* Запрещаем изменение размера для textarea */
 }
 
-#input {
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-#input:focus {
-    border-color: #85b7d9; /* Синий акцент */
-    box-shadow: 0 0 3px #85b7d9;
+#input:focus, textarea:focus {
+    border-color: #85b7d9; /* Синий акцент при фокусе */
+    box-shadow: 0 0 3px #85b7d9; /* Лёгкая тень при фокусе */
 }
 
 .button-login, .button-register, #ready {

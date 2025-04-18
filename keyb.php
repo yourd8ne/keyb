@@ -34,7 +34,8 @@ $controller->handleRequest();
             </div>
             <div id="input-container">
             </div>
-            <div class="output">
+        </div>
+        <div class="output">
                 <div id="time"></div>
                 <div id="speed"></div>
                 <div id="numberOfCodes"></div>
@@ -42,7 +43,6 @@ $controller->handleRequest();
                 <button id="again">Повторить</button>
                 <button id="back-to-menu">Вернуться в меню</button>
             </div>
-        </div>
         <!-- <?php if (isset($_SESSION['username'])): ?>
             <button id="logout" onclick="window.location.href='?action=logout'">Выйти</button>
         <?php endif; ?> -->
