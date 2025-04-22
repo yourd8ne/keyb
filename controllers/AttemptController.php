@@ -19,6 +19,7 @@ class AttemptsController {
             // Форматируем данные для удобного отображения
             return [
                 'attempts_count' => $stats['attempts_count'],
+                'in_class_count' => $stats['in_class_count'], // Добавляем ключ in_class_count
                 'speed' => [
                     'mean' => round($stats['mean_speed'], 2),
                     'max' => $stats['max_speed'],
@@ -28,7 +29,6 @@ class AttemptsController {
                 ],
                 'chars_avg' => round($stats['avg_chars']),
                 'snippets_avg' => round($stats['avg_snippets']),
-                'in_class_ratio' => round(($stats['in_class_count'] / $stats['attempts_count']) * 100, 1)
             ];
         } catch (Exception $e) {
             error_log('Error in getUserStats: ' . $e->getMessage());

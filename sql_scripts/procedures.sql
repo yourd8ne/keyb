@@ -175,9 +175,9 @@ BEGIN
         a.UserNumberOfSnippets
     FROM
         Attempts a
-    JOIN
+    LEFT JOIN
         Users u ON a.idUser = u.idUsers
-    JOIN
+    LEFT JOIN
         Dictionaries d ON a.idDictionary = d.idDictionary;
 END //
 

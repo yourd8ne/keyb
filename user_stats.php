@@ -68,10 +68,17 @@ $controller->closeModelConnection();
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">
-                        Процент в классе:
-                        <span class="tooltip">Доля упражнений, выполненных в классе (а не дома)</span>
+                        В аудитории:
+                        <span class="tooltip">Количество упражнений, выполненных в аудитории</span>
                     </span>
-                    <span class="stat-value"><?= $stats['in_class_ratio'] ?>%</span>
+                    <span class="stat-value"><?= $stats['in_class_count'] ?></span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">
+                        Дома:
+                        <span class="tooltip">Количество упражнений, выполненных дома</span>
+                    </span>
+                    <span class="stat-value"><?= $stats['attempts_count'] - $stats['in_class_count'] ?></span>
                 </div>
             </div>
             
@@ -82,35 +89,35 @@ $controller->closeModelConnection();
                         Средняя:
                         <span class="tooltip">Среднее арифметическое всех показателей скорости</span>
                     </span>
-                    <span class="stat-value"><?= $stats['speed']['mean'] ?></span>
+                    <span class="stat-value"><?= number_format($stats['speed']['mean'], 1) ?></span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">
                         Медиана:
                         <span class="tooltip">Значение скорости, которое делит все попытки ровно пополам</span>
                     </span>
-                    <span class="stat-value"><?= $stats['speed']['median'] ?></span>
+                    <span class="stat-value"><?= number_format($stats['speed']['median'], 1) ?></span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">
                         Максимальная:
                         <span class="tooltip">Лучший показатель скорости за все попытки</span>
                     </span>
-                    <span class="stat-value"><?= $stats['speed']['max'] ?></span>
+                    <span class="stat-value"><?= number_format($stats['speed']['max'], 1) ?></span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">
                         95-й перцентиль:
                         <span class="tooltip">95% попыток были медленнее этого значения</span>
                     </span>
-                    <span class="stat-value"><?= $stats['speed']['percentile_95'] ?></span>
+                    <span class="stat-value"><?= number_format($stats['speed']['percentile_95'], 1) ?></span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">
                         3-й квартиль:
                         <span class="tooltip">75% попыток были медленнее этого значения</span>
                     </span>
-                    <span class="stat-value"><?= $stats['speed']['quartile_3'] ?></span>
+                    <span class="stat-value"><?= number_format($stats['speed']['quartile_3'], 1) ?></span>
                 </div>
             </div>
             

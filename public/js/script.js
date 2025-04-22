@@ -239,8 +239,11 @@ const endSession = () => {
     const elapsedTime = (timeEnd - appState.timeStart) / 1000;
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
+    const numberOfLines = textArray.length === 1
+    ? textArray[0].code.split('\n').length // Если один блок, считаем строки
+    : textArray.length; // Если несколько блоков, считаем их количество
     // Отображаем статистику
-    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
+    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfLines}`;
     document.getElementById('numberOfChars').textContent = `Количество символов из словаря: ${appState.numberOfChars}`;
     document.getElementById('time').textContent = `Время: ${elapsedTime.toFixed(1)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
@@ -250,7 +253,7 @@ const endSession = () => {
     // Показываем блок с результатами
     setAppStateClass('output'); // Переключаемся в состояние вывода статистики
     // Сохраняем данные сессии
-    saveSessionData(appState.timeStart, username, elapsedTime, speed, appState.userNumberOfCharacters);
+    saveSessionData(appState.timeStart, username, elapsedTime, speed, appState.userNumberOfCharacters, numberOfLines);
 };
 
 function formatDateToMySQL(date) {
@@ -263,7 +266,7 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters) => {
+const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters, numberOfLines) => {
     if (!selectedDictionaryName) {
         console.error('Ошибка: не выбран словарь перед сохранением.');
         return;
@@ -277,7 +280,7 @@ const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumber
         timeSpent: timeSpent,
         speed: speed,
         userNumberOfCharacters: userNumberOfCharacters,
-        userNumberOfSnippets: textArray.length,
+        userNumberOfSnippets: numberOfLines,
         idCodes: codeIds // Передаем массив ID кодов
     };
     fetch('controllers/SessionController.php', {
