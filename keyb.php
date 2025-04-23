@@ -14,13 +14,23 @@ $controller->handleRequest();
     <link rel="stylesheet" href="public/css/style.css" />
     <link rel="stylesheet" href="highlight/styles/github.min.css">
     <!-- <script src="highlight/highlight.min.js"></script> -->
-    <link rel="stylesheet" href="dev/codemirror/lib/codemirror.css">
-    <link rel="stylesheet" href="dev/theme-one-dark/style.css">
     <script type="module">
-        import { EditorView, basicSetup } from "dev/codemirror";
-        import { python } from "dev/lang-python";
-        import { cpp } from "dev/lang-cpp";
-        import { EditorState } from "dev/state";
+        import { EditorState } from "./node_modules/@codemirror/state/dist/index.js";
+        import { EditorView, basicSetup } from "./node_modules/@codemirror/view/dist/index.js";
+        import { keymap } from "./node_modules/@codemirror/view/dist/index.js";
+        import { defaultKeymap } from "./node_modules/@codemirror/commands/dist/index.js";
+        import { python } from "./node_modules/@codemirror/lang-python/dist/index.js";
+        import { cpp } from "./node_modules/@codemirror/lang-cpp/dist/index.js";
+        // Экспортируем модули для использования в script.js
+        window.CodeMirrorModules = {
+            EditorView,
+            EditorState,
+            basicSetup,
+            keymap,
+            defaultKeymap,
+            python,
+            cpp,
+        };
     </script>
 </head>
 <body>

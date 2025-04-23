@@ -80,44 +80,66 @@ const autoExpandInput = (inputElement) => {
     inputElement.style.height = `${inputElement.scrollHeight}px`; // Устанавливаем высоту на основе содержимого
 };
 
+// const createInputField = () => {
+//     const inputContainer = document.getElementById('input-container');
+//     inputContainer.innerHTML = ''; // Очищаем контейнер
+
+//     if (textArray.length > 1) {
+//         // Если несколько строк кода, используем input
+//         const inputElement = document.createElement('input');
+//         inputElement.id = 'input';
+//         inputElement.type = 'text';
+//         inputContainer.appendChild(inputElement);
+
+//         // Сохраняем ссылку на input в глобальное состояние
+//         appState.editor = inputElement;
+
+//         // Устанавливаем фокус на input
+//         inputElement.focus();
+
+//         // Отображаем первую строку кода
+//         displayCodeSample(appState.currentArrayIndex);
+//     } else if (textArray.length === 1) {
+//         // Если один большой блок кода, используем textarea
+//         const textareaElement = document.createElement('textarea');
+//         textareaElement.id = 'input';
+//         textareaElement.style.resize = 'none'; // Запрещаем изменение размера
+//         textareaElement.style.height = `${document.querySelector('.sample').offsetHeight - 2}px`; // Высота равна высоте блока кода
+//         inputContainer.appendChild(textareaElement);
+
+//         // Сохраняем ссылку на textarea в глобальное состояние
+//         appState.editor = textareaElement;
+
+//         // Устанавливаем фокус на textarea
+//         textareaElement.focus();
+
+//         // Отображаем весь код
+//         displayCodeSample(0);
+//     } else {
+//         console.error('Ошибка: textArray пуст, невозможно создать поле ввода.');
+//     }
+// };
+
 const createInputField = () => {
     const inputContainer = document.getElementById('input-container');
     inputContainer.innerHTML = ''; // Очищаем контейнер
 
-    if (textArray.length > 1) {
-        // Если несколько строк кода, используем input
-        const inputElement = document.createElement('input');
-        inputElement.id = 'input';
-        inputElement.type = 'text';
-        inputContainer.appendChild(inputElement);
+    const { EditorView, EditorState, basicSetup, python, cpp, oneDark } = window.CodeMirrorModules;
 
-        // Сохраняем ссылку на input в глобальное состояние
-        appState.editor = inputElement;
+    // Определяем язык подсветки
+    const languageExtension = selectedDictionaryName === 'python' ? python() : cpp();
 
-        // Устанавливаем фокус на input
-        inputElement.focus();
+    // Создаём редактор CodeMirror
+    appState.editor = new EditorView({
+        state: EditorState.create({
+            doc: '', // Начальный текст
+            extensions: [basicSetup, languageExtension, oneDark],
+        }),
+        parent: inputContainer,
+    });
 
-        // Отображаем первую строку кода
-        displayCodeSample(appState.currentArrayIndex);
-    } else if (textArray.length === 1) {
-        // Если один большой блок кода, используем textarea
-        const textareaElement = document.createElement('textarea');
-        textareaElement.id = 'input';
-        textareaElement.style.resize = 'none'; // Запрещаем изменение размера
-        textareaElement.style.height = `${document.querySelector('.sample').offsetHeight - 2}px`; // Высота равна высоте блока кода
-        inputContainer.appendChild(textareaElement);
-
-        // Сохраняем ссылку на textarea в глобальное состояние
-        appState.editor = textareaElement;
-
-        // Устанавливаем фокус на textarea
-        textareaElement.focus();
-
-        // Отображаем весь код
-        displayCodeSample(0);
-    } else {
-        console.error('Ошибка: textArray пуст, невозможно создать поле ввода.');
-    }
+    // Устанавливаем фокус на редактор
+    appState.editor.focus();
 };
 
 // API functions
@@ -192,11 +214,20 @@ const displayCodeSample = (index) => {
     if (!item) return;
 
     codeBlock.innerHTML = ''; // Очищаем блок
-    const pre = createElement('pre');
-    const code = createElement('code', { className: item.highlightName, textContent: item.code });
-    pre.appendChild(code);
-    codeBlock.appendChild(pre);
-    hljs.highlightBlock(code); // Подсвечиваем код
+
+    const { EditorView, EditorState, basicSetup, python, cpp, oneDark } = window.CodeMirrorModules;
+
+    // Определяем язык подсветки
+    const languageExtension = item.highlightName === 'python' ? python() : cpp();
+
+    // Создаём редактор CodeMirror для отображения примера кода
+    new EditorView({
+        state: EditorState.create({
+            doc: item.code, // Текст кода
+            extensions: [basicSetup, languageExtension, oneDark, EditorView.editable.of(false)], // Только для чтения
+        }),
+        parent: codeBlock,
+    });
 };
 
 const setupInputHandler = () => {
@@ -209,21 +240,50 @@ const setupInputHandler = () => {
     editor.focus(); // Устанавливаем фокус на поле ввода
 };
 
+// const handleInput = (event) => {
+//     if (!appState.timeStart) appState.timeStart = new Date();
+
+//     const currentText = textArray[appState.currentArrayIndex].code.trim(); // Текущая строка кода
+//     const userInput = appState.editor.value.trim(); // Ввод пользователя
+
+//     const isTextarea = appState.editor.tagName.toLowerCase() === 'textarea';
+
+//     // Условие для проверки ввода
+//     if ((isTextarea && event.key === 'Enter' && event.shiftKey) || (!isTextarea && event.key === 'Enter')) {
+//         event.preventDefault(); // Предотвращаем стандартное поведение Enter
+
+//         if (userInput === currentText) {
+//             appState.userNumberOfCharacters += userInput.length;
+//             appState.editor.value = ''; // Очищаем поле ввода
+
+//             if (appState.currentArrayIndex < textArray.length - 1) {
+//                 appState.currentArrayIndex++;
+//                 displayCodeSample(appState.currentArrayIndex); // Отображаем следующую строку
+//             } else {
+//                 endSession(); // Завершаем попытку
+//             }
+//         } else {
+//             appState.editor.classList.add('error'); // Подсвечиваем ошибку
+//             setTimeout(() => appState.editor.classList.remove('error'), 1000); // Убираем подсветку через 1 секунду
+//         }
+//     }
+// };
+
 const handleInput = (event) => {
     if (!appState.timeStart) appState.timeStart = new Date();
 
     const currentText = textArray[appState.currentArrayIndex].code.trim(); // Текущая строка кода
-    const userInput = appState.editor.value.trim(); // Ввод пользователя
-
-    const isTextarea = appState.editor.tagName.toLowerCase() === 'textarea';
+    const userInput = appState.editor.state.doc.toString().trim(); // Ввод пользователя через CodeMirror
 
     // Условие для проверки ввода
-    if ((isTextarea && event.key === 'Enter' && event.shiftKey) || (!isTextarea && event.key === 'Enter')) {
+    if (event.key === 'Enter') {
         event.preventDefault(); // Предотвращаем стандартное поведение Enter
 
         if (userInput === currentText) {
             appState.userNumberOfCharacters += userInput.length;
-            appState.editor.value = ''; // Очищаем поле ввода
+            appState.editor.dispatch({
+                changes: { from: 0, to: appState.editor.state.doc.length, insert: '' }, // Очищаем поле ввода
+            });
 
             if (appState.currentArrayIndex < textArray.length - 1) {
                 appState.currentArrayIndex++;
@@ -232,8 +292,15 @@ const handleInput = (event) => {
                 endSession(); // Завершаем попытку
             }
         } else {
-            appState.editor.classList.add('error'); // Подсвечиваем ошибку
-            setTimeout(() => appState.editor.classList.remove('error'), 1000); // Убираем подсветку через 1 секунду
+            // Подсвечиваем ошибку
+            appState.editor.dispatch({
+                effects: EditorView.theme.of({ "&": { backgroundColor: "#ffdddd" } }),
+            });
+            setTimeout(() => {
+                appState.editor.dispatch({
+                    effects: EditorView.theme.of({ "&": { backgroundColor: "white" } }),
+                });
+            }, 1000);
         }
     }
 };
