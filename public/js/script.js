@@ -20,7 +20,7 @@ const appState = {
 // Global variables
 let textArray = [];
 let selectedDictionaryName = '';
-let numberOfCodes;
+//let numberOfCodes;
 
 // Utility functions
 const createElement = (tag, attributes = {}, styles = {}) => {
@@ -115,6 +115,8 @@ const createInputField = () => {
 
         // Отображаем весь код
         displayCodeSample(0);
+    } else {
+        console.error('Ошибка: textArray пуст, невозможно создать поле ввода.');
     }
 };
 
@@ -146,19 +148,22 @@ const getDictionaryInfo = async () => {
     }
 };
 
-const getNumberOfCodes = async () => {
-    try {
-        const data = await fetchData('controllers/CodeController.php?action=getNumberOfCodes');
-        numberOfCodes = data.NumberOfCodes;
-    } catch (error) {
-        console.error('Error fetching number of codes:', error);
+
+const getCodeBlock = async (dictionaryName) => {
+    if (!dictionaryName) throw new Error('No dictionary selected');
+    console.log('Fetching code block for dictionary:', dictionaryName);
+    const data = await fetchData(`controllers/CodeController.php?action=getCodes&dictionaryName=${encodeURIComponent(dictionaryName)}`);
+    console.log('Data received:', data);
+    if (!Array.isArray(data)) {
+        console.error('Expected an array but got:', data);
+        throw new Error('Invalid data format received from server');
     }
-};
 
-const getCodeBlock = async (dictionaryName, numCodes) => {
-    if (!dictionaryName || !numCodes) throw new Error('No dictionary selected or number of codes not provided');
+    if (data.length === 0) {
+        console.error('Ошибка: сервер вернул пустой массив кодов.');
+        throw new Error('No codes available for the selected dictionary.');
+    }
 
-    const data = await fetchData(`controllers/CodeController.php?action=getCodes&dictionaryName=${encodeURIComponent(dictionaryName)}&numberOfCodes=${numCodes}`);
     textArray = data.map(item => ({
         idCode: item.idCode,
         code: item.Code,
@@ -196,6 +201,10 @@ const displayCodeSample = (index) => {
 
 const setupInputHandler = () => {
     const editor = appState.editor;
+    if (!editor) {
+        console.error('Ошибка: editor не инициализирован.');
+        return;
+    }
     editor.addEventListener('keydown', handleInput); // Добавляем обработчик событий
     editor.focus(); // Устанавливаем фокус на поле ввода
 };
@@ -317,7 +326,7 @@ const resetApp = (fullReset = false) => {
 
 // Event listeners
 window.addEventListener('load', async () => {
-    await getNumberOfCodes();
+    //await getNumberOfCodes();
     await getDictionaryInfo();
     document.getElementById('ready').addEventListener('click', async () => {
         selectedDictionaryName = document.getElementById('prog-lang').value;
@@ -329,7 +338,7 @@ window.addEventListener('load', async () => {
 
         setAppStateClass('processing'); // Устанавливаем состояние обработки
 
-        await getCodeBlock(selectedDictionaryName, numberOfCodes);
+        await getCodeBlock(selectedDictionaryName);
         createInputField(); // Создаём поле ввода
         setupInputHandler(); // Настраиваем обработчик ввода
     });
@@ -338,7 +347,7 @@ window.addEventListener('load', async () => {
         appState.reset(false);
         setAppStateClass('processing');
 
-        await getCodeBlock(selectedDictionaryName, numberOfCodes);
+        await getCodeBlock(selectedDictionaryName);
         createInputField(); // Создаём поле ввода
         setupInputHandler(); // Настраиваем обработчик ввода
     });

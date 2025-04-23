@@ -10,25 +10,25 @@ class CodeController {
         $this->model = new DatabaseModel();
     }
 
-    public function getNumberOfCodes() {
-        try {
-            $dataFromModel = $this->model->getNumberOfCodes();
+    // public function getNumberOfCodes() {
+    //     try {
+    //         $dataFromModel = $this->model->getNumberOfCodes();
 
-            if ($dataFromModel === 0) {
-                throw new Exception('Data returned from model is 0');
-            }
+    //         if ($dataFromModel === 0) {
+    //             throw new Exception('Data returned from model is 0');
+    //         }
             
-            echo json_encode([
-                'NumberOfCodes' => $dataFromModel
-            ]);
-        } catch (Exception $e) {
-            error_log('Error in getNumberOfCodes: ' . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'error' => 'An error occurred while fetching numberOfCodes info'
-            ]);
-        }
-    }
+    //         echo json_encode([
+    //             'NumberOfCodes' => $dataFromModel
+    //         ]);
+    //     } catch (Exception $e) {
+    //         error_log('Error in getNumberOfCodes: ' . $e->getMessage());
+    //         http_response_code(500);
+    //         echo json_encode([
+    //             'error' => 'An error occurred while fetching numberOfCodes info'
+    //         ]);
+    //     }
+    // }
 
     public function getDictionariesInfo() {
         try {
@@ -40,12 +40,11 @@ class CodeController {
     
             $response = [];
             foreach ($dataFromModel as $item) {
-                if (!is_array($item) || !isset($item['Name'], $item['NumberOfCodes'])) {
+                if (!is_array($item) || !isset($item['Name'])) {
                     throw new Exception('Invalid data format in model response');
                 }
                 $response[] = [
-                    'Name' => $item['Name'],
-                    'NumberOfCodes' => $item['NumberOfCodes']
+                    'Name' => $item['Name']
                 ];
             }
             echo json_encode($response);
@@ -58,9 +57,13 @@ class CodeController {
         }
     }
 
-    public function getCodes($dictionaryName, $numberOfCodes) {
+    public function getCodes($dictionaryName) {
         try {
-            $dataFromModel = $this->model->getCodes($dictionaryName, $numberOfCodes);
+            if (empty($dictionaryName)) {
+                throw new Exception('Dictionary name is required');
+            }
+            
+            $dataFromModel = $this->model->getCodes($dictionaryName);
     
             if (!is_array($dataFromModel)) {
                 throw new Exception('Data returned from model is not an array');
@@ -74,11 +77,10 @@ class CodeController {
                 $response[] = [
                     'HighlightName' => $item['HighlightName'],
                     'Code' => $item['Code'],
-                    'idCode' => $item['idCode']  // Добавляем idCode в ответ
+                    'idCode' => $item['idCode']
                 ];
             }
-    
-            // Отправляем ответ в формате JSON
+            
             echo json_encode($response);
         } catch (Exception $e) {
             error_log('Error in getCodes: ' . $e->getMessage());
@@ -101,28 +103,26 @@ $controller = new CodeController();
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['action'])) {
         switch ($_GET['action']) {
-            case 'getNumberOfCodes':
-                $controller->getNumberOfCodes();
-                break;
             case 'getDictionariesInfo':
                 $controller->getDictionariesInfo();
                 break;
             case 'getCodes':
-                if (!isset($_GET['dictionaryName'], $_GET['numberOfCodes'])) {
-                    echo json_encode(['error' => 'Missing parameters']);
+                if (!isset($_GET['dictionaryName']) || empty($_GET['dictionaryName'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing or empty dictionaryName parameter']);
                     break;
                 }
-            
+
                 $dictionaryName = $_GET['dictionaryName'];
-                $numberOfCodes = intval($_GET['numberOfCodes']);
-            
-                $controller->getCodes($dictionaryName, $numberOfCodes);
+                $controller->getCodes($dictionaryName);
                 break;
             default:
+                http_response_code(400);
                 echo json_encode(['error' => 'Invalid action']);
                 break;
         }
     } else {
+        http_response_code(400);
         echo json_encode(['error' => 'Action parameter missing']);
     }
 }

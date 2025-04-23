@@ -9,7 +9,7 @@ CREATE SCHEMA IF NOT EXISTS `KeyB` DEFAULT CHARACTER SET utf8;
 USE `KeyB`;
 
 -- -----------------------------------------------------
--- Table `KeyB`.`users`
+-- Table `KeyB`.`Users`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `KeyB`.`Users` (
   `idUsers` INT NOT NULL AUTO_INCREMENT,
@@ -18,18 +18,18 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Users` (
   PRIMARY KEY (`idUsers`),
   UNIQUE INDEX `id_UNIQUE` (`idUsers` ASC),
   UNIQUE INDEX `login_UNIQUE` (`Login` ASC)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------
 -- Table `KeyB`.`Dictionaries`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `KeyB`.`Dictionaries` (
   `idDictionary` INT NOT NULL AUTO_INCREMENT,
-  `Name` VARCHAR(255) NULL,
+  `Name` VARCHAR(255) NOT NULL,
   `Languages_idLanguage` INT NOT NULL,
-  `NumberOfCodes` iNT NOT NULL,
+  `NumberOfCodesForStudent` INT NOT NULL,
   PRIMARY KEY (`idDictionary`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------
 -- Table `KeyB`.`Languages`
@@ -39,20 +39,24 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Languages` (
   `Name` VARCHAR(255),
   `HighlightName` VARCHAR(255),
   PRIMARY KEY (`idLanguage`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------
 -- Table `KeyB`.`Dictionary_Codes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `KeyB`.`Dictionary_Codes` (
-  `Dictionaries_idDictionary` INT NOT NULL,
   `idCode` INT NOT NULL AUTO_INCREMENT,
+  `Dictionaries_idDictionary` INT NOT NULL,
   `Code` TEXT,
-  PRIMARY KEY (`Dictionaries_idDictionary`, `idCode`)
-) ENGINE=MyISAM;
+  PRIMARY KEY (`idCode`),
+  FOREIGN KEY (`Dictionaries_idDictionary`)
+    REFERENCES `KeyB`.`Dictionaries` (`idDictionary`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------
--- Table `KeyB`.`attempt`
+-- Table `KeyB`.`Attempts`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts` (
   `idAttempt` INT NOT NULL AUTO_INCREMENT,
@@ -65,18 +69,19 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts` (
   `UserNumberOfCharacters` INT NOT NULL,
   `UserNumberOfSnippets` INT NOT NULL,
   PRIMARY KEY (`idAttempt`),
-  CONSTRAINT `id_user_fk`
-    FOREIGN KEY (`idUser`)
+  FOREIGN KEY (`idUser`)
     REFERENCES `KeyB`.`Users` (`idUsers`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `id_dictionary_fk`
-    FOREIGN KEY (`idDictionary`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  FOREIGN KEY (`idDictionary`)
     REFERENCES `KeyB`.`Dictionaries` (`idDictionary`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION
-) ENGINE=MyISAM;
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
+-- -----------------------------------------------------
+-- Table `KeyB`.`Attempts_Codes`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts_Codes` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `idAttempts` INT NOT NULL,
@@ -84,32 +89,30 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts_Codes` (
   `idCode` INT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_attempts_code` (`idAttempts`, `idCode`),
-  CONSTRAINT `fk_attempts`
-    FOREIGN KEY (`idAttempts`)
-    REFERENCES `Attempts` (`idAttempt`)
+  FOREIGN KEY (`idAttempts`)
+    REFERENCES `KeyB`.`Attempts` (`idAttempt`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_dictionary`
-    FOREIGN KEY (`idDictionary`)
-    REFERENCES `Dictionaries` (`idDictionary`)
+  FOREIGN KEY (`idDictionary`)
+    REFERENCES `KeyB`.`Dictionaries` (`idDictionary`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_code`
-    FOREIGN KEY (`idCode`)
-    REFERENCES `Dictionary_Codes` (`idCode`)
+  FOREIGN KEY (`idCode`)
+    REFERENCES `KeyB`.`Dictionary_Codes` (`idCode`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=MyISAM;
+) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS `KeyB`.`GlobalSettings` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `SettingName` VARCHAR(255) NOT NULL,
-  `Value` INT NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `setting_name_UNIQUE` (`SettingName` ASC)
-) ENGINE=MyISAM;
-
-
+-- -----------------------------------------------------
+-- Table `KeyB`.`GlobalSettings` тоже больше не надо
+-- -----------------------------------------------------
+-- CREATE TABLE IF NOT EXISTS `KeyB`.`GlobalSettings` (
+--   `id` INT NOT NULL AUTO_INCREMENT,
+--   `SettingName` VARCHAR(255) NOT NULL,
+--   `Value` INT NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE INDEX `setting_name_UNIQUE` (`SettingName` ASC)
+-- ) ENGINE=InnoDB;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

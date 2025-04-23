@@ -34,31 +34,69 @@ BEGIN
     LIMIT 1;
 END //
 
-CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50), IN numberOfCodes INT)
+-- CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
+-- BEGIN
+--     DECLARE id_Dictionary INT;
+--     DECLARE id_Language INT;
+--     DECLARE numberOfCodesForStudent INT;
+
+--     -- Получаем id словаря, язык и количество кодов для студента
+--     SELECT idDictionary, Languages_idLanguage, NumberOfCodesForStudent
+--     INTO id_Dictionary, id_Language, numberOfCodesForStudent
+--     FROM Dictionaries
+--     WHERE Name = dictionaryName
+--     LIMIT 1;
+
+--     -- Проверка, что словарь найден
+--     IF id_Dictionary IS NOT NULL THEN
+--         -- Проверка, что количество кодов для студента не NULL
+--         IF numberOfCodesForStudent IS NOT NULL THEN
+--             -- Возвращаем случайные строки из словаря
+--             SELECT dc.Code, l.HighlightName, dc.idCode
+--             FROM Dictionary_Codes dc
+--             JOIN Languages l ON l.idLanguage = id_Language
+--             WHERE dc.Dictionaries_idDictionary = id_Dictionary
+--             ORDER BY RAND()
+--             LIMIT numberOfCodesForStudent;
+--         ELSE
+--             SIGNAL SQLSTATE '45000'
+--             SET MESSAGE_TEXT = 'NumberOfCodesForStudent is NULL';
+--         END IF;
+--     ELSE
+--         -- Если словарь не найден, выбрасываем ошибку
+--         SIGNAL SQLSTATE '45000'
+--         SET MESSAGE_TEXT = 'Dictionary not found';
+--     END IF;
+-- END //
+
+CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
 BEGIN
     DECLARE id_Dictionary INT;
     DECLARE id_Language INT;
-    
-    IF numberOfCodes <= 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Invalid numberOfCodes value';
-    END IF;
+    DECLARE studentCodeLimit INT;
 
-    -- Получаем id словаря по его имени
-    SELECT idDictionary, Languages_idLanguage INTO id_Dictionary, id_Language
+    -- Получаем id словаря, язык и количество кодов для студента
+    SELECT idDictionary, Languages_idLanguage, NumberOfCodesForStudent
+    INTO id_Dictionary, id_Language, studentCodeLimit
     FROM Dictionaries
     WHERE Name = dictionaryName
     LIMIT 1;
 
     -- Проверка, что словарь найден
     IF id_Dictionary IS NOT NULL THEN
-        -- Нужно получить помимо кода и его хайлайтнейма, случайный набор из данных, где имя словаря совпадает с нашим
-        SELECT dc.Code, l.HighlightName, dc.idCode
-        FROM Dictionary_Codes dc
-        JOIN Languages l ON l.idLanguage = id_Language
-        WHERE dc.Dictionaries_idDictionary = id_Dictionary
-        ORDER BY RAND()
-        LIMIT numberOfCodes;
+        -- Проверка, что количество кодов для студента не NULL
+        IF studentCodeLimit IS NOT NULL THEN
+            -- Возвращаем случайные строки из словаря
+            SELECT dc.Code, l.HighlightName, dc.idCode
+            FROM Dictionary_Codes dc
+            JOIN Languages l ON l.idLanguage = id_Language
+            WHERE dc.Dictionaries_idDictionary = id_Dictionary
+            ORDER BY RAND()
+            LIMIT studentCodeLimit;
+        ELSE
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'NumberOfCodesForStudent is NULL';
+        END IF;
     ELSE
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Dictionary not found';
@@ -74,7 +112,7 @@ END //
 
 CREATE PROCEDURE getDictionariesInfo()
 BEGIN
-    SELECT Name, NumberOfCodes FROM Dictionaries;
+    SELECT Name FROM Dictionaries;
 END //
 
 CREATE PROCEDURE saveSessionData(
@@ -179,12 +217,6 @@ BEGIN
         Users u ON a.idUser = u.idUsers
     LEFT JOIN
         Dictionaries d ON a.idDictionary = d.idDictionary;
-END //
-
-
-CREATE PROCEDURE getNumberOfCodes()
-BEGIN
-SELECT Value FROM GlobalSettings WHERE SettingName = 'NumberOfCodes';
 END //
 
 
@@ -302,25 +334,15 @@ BEGIN
         WHERE idUser = p_user_id;
     END IF;
 END //
-
 DELIMITER ;
-
-----
 -- Языки, словари, коды..
 DELIMITER //
-
-
-INSERT INTO GlobalSettings (`SettingName`, `Value`)
-VALUES ('NumberOfCodes', 3);
-
-UPDATE GlobalSettings SET `Value` = 4 WHERE `SettingName` = 'NumberOfCodes';
-
 INSERT INTO Languages (Name, HighlightName) VALUES ('Python', 'python');
 INSERT INTO Languages (Name, HighlightName) VALUES ('C++', 'cpp');
 
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodes) VALUES ('simplePythonClass', 1, 1);
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodes) VALUES ('baseCppCodes', 2, 10);
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodes) VALUES ('sklearnExamples', 1, 15);
+INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('simplePythonClass', 1, 1);
+INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('baseCppCodes', 2, 10);
+INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('sklearnExamples', 1, 15);
 
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (1, 'class Dog:\n  def __init__(self, name):\n    self.name = name\n  def bark(self):\n    print(f"{self.name} says woof!")');
 
@@ -350,7 +372,6 @@ INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'impor
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'y[::5, :] += 0.5 - rng.rand(20, 2)');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'X = np.sort(200 * rng.rand(100, 1) - 100, axis=0)');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'train_ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train)');
-
 
 //
 DELIMITER ;

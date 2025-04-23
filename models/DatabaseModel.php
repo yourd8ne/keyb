@@ -36,17 +36,17 @@ class DatabaseModel {
         }
     }
     
-    public function getNumberOfCodes() {
-        $sql = "CALL getNumberOfCodes;";
+    // public function getNumberOfCodes() {
+    //     $sql = "CALL getNumberOfCodes;";
 
-        $res = $this->conn->query($sql);
+    //     $res = $this->conn->query($sql);
         
-        if ($res && $row = $res->fetch_assoc()) {
-            return (int)$row['Value'];
-        } else {
-            return 0;
-        }
-    }
+    //     if ($res && $row = $res->fetch_assoc()) {
+    //         return (int)$row['Value'];
+    //     } else {
+    //         return 0;
+    //     }
+    // }
 
     public function getDictionariesInfo() {
         $sql = "CALL getDictionariesInfo()";
@@ -57,8 +57,7 @@ class DatabaseModel {
             $array = [];
             while ($row = $res->fetch_assoc()) {
                 $array[] = [
-                    'Name' => $row['Name'],
-                    'NumberOfCodes' => $row['NumberOfCodes']
+                    'Name' => $row['Name']
                 ];
             }
             return $array;
@@ -79,27 +78,25 @@ class DatabaseModel {
         return $row ? $row['idDictionary'] : null;
     }
 
-    public function getCodes($dictionaryName, $numberOfCodes) {
-        $dictionaryName = $this->conn->real_escape_string($dictionaryName);
-        $numberOfCodes = intval($numberOfCodes); // Ensure it's an integer
-    
-        // Выполнение процедуры
-        $sql = "CALL getCodes('$dictionaryName', $numberOfCodes)";
-        $result = $this->conn->query($sql);
-    
-        $response = [];
-        if ($result) {
-            // Добавляем idCode в ответ
+    public function getCodes($dictionaryName) {
+        $stmt = $this->conn->prepare("CALL getCodes(?)");
+        $stmt->bind_param("s", $dictionaryName);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result && $result->num_rows > 0) {
+            $array = [];
             while ($row = $result->fetch_assoc()) {
-                $response[] = [
+                $array[] = [
                     'HighlightName' => $row['HighlightName'],
                     'Code' => $row['Code'],
-                    'idCode' => $row['idCode']  // Добавляем idCode
+                    'idCode' => $row['idCode']
                 ];
             }
+            return $array;
+        } else {
+            return [];
         }
-    
-        return !empty($response) ? $response : null;
     }    
 
     public function getAttempts() {

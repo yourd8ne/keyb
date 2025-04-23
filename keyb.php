@@ -13,7 +13,15 @@ $controller->handleRequest();
     <title>keyb</title>
     <link rel="stylesheet" href="public/css/style.css" />
     <link rel="stylesheet" href="highlight/styles/github.min.css">
-    <script src="highlight/highlight.min.js"></script>
+    <!-- <script src="highlight/highlight.min.js"></script> -->
+    <link rel="stylesheet" href="dev/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="dev/theme-one-dark/style.css">
+    <script type="module">
+        import { EditorView, basicSetup } from "dev/codemirror";
+        import { python } from "dev/lang-python";
+        import { cpp } from "dev/lang-cpp";
+        import { EditorState } from "dev/state";
+    </script>
 </head>
 <body>
     <div class="container">
