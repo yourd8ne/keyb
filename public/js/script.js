@@ -1,4 +1,4 @@
-// State management
+
 const appState = {
     timeStart: null,
     userNumberOfCharacters: 0,
@@ -80,66 +80,58 @@ const autoExpandInput = (inputElement) => {
     inputElement.style.height = `${inputElement.scrollHeight}px`; // Устанавливаем высоту на основе содержимого
 };
 
-// const createInputField = () => {
-//     const inputContainer = document.getElementById('input-container');
-//     inputContainer.innerHTML = ''; // Очищаем контейнер
-
-//     if (textArray.length > 1) {
-//         // Если несколько строк кода, используем input
-//         const inputElement = document.createElement('input');
-//         inputElement.id = 'input';
-//         inputElement.type = 'text';
-//         inputContainer.appendChild(inputElement);
-
-//         // Сохраняем ссылку на input в глобальное состояние
-//         appState.editor = inputElement;
-
-//         // Устанавливаем фокус на input
-//         inputElement.focus();
-
-//         // Отображаем первую строку кода
-//         displayCodeSample(appState.currentArrayIndex);
-//     } else if (textArray.length === 1) {
-//         // Если один большой блок кода, используем textarea
-//         const textareaElement = document.createElement('textarea');
-//         textareaElement.id = 'input';
-//         textareaElement.style.resize = 'none'; // Запрещаем изменение размера
-//         textareaElement.style.height = `${document.querySelector('.sample').offsetHeight - 2}px`; // Высота равна высоте блока кода
-//         inputContainer.appendChild(textareaElement);
-
-//         // Сохраняем ссылку на textarea в глобальное состояние
-//         appState.editor = textareaElement;
-
-//         // Устанавливаем фокус на textarea
-//         textareaElement.focus();
-
-//         // Отображаем весь код
-//         displayCodeSample(0);
-//     } else {
-//         console.error('Ошибка: textArray пуст, невозможно создать поле ввода.');
-//     }
-// };
-
 const createInputField = () => {
     const inputContainer = document.getElementById('input-container');
-    inputContainer.innerHTML = ''; // Очищаем контейнер
+    inputContainer.innerHTML = '';
+    inputContainer.style.display = 'block';
 
-    const { EditorView, EditorState, basicSetup, python, cpp, oneDark } = window.CodeMirrorModules;
+    const mode = selectedDictionaryName === 'python' ? 'python' : 'text/x-c++src';
+    
+    // Safer way to get sample height
+    let sampleHeight = 300;
+    const sampleEditor = document.querySelector('.sample .CodeMirror');
+    if (sampleEditor && sampleEditor.CodeMirror) {
+        sampleHeight = sampleEditor.CodeMirror.getWrapperElement().offsetHeight;
+    } else if (sampleEditor) {
+        // Fallback if CodeMirror instance isn't directly available
+        sampleHeight = sampleEditor.offsetHeight;
+    }
 
-    // Определяем язык подсветки
-    const languageExtension = selectedDictionaryName === 'python' ? python() : cpp();
-
-    // Создаём редактор CodeMirror
-    appState.editor = new EditorView({
-        state: EditorState.create({
-            doc: '', // Начальный текст
-            extensions: [basicSetup, languageExtension, oneDark],
-        }),
-        parent: inputContainer,
+    appState.editor = CodeMirror(inputContainer, {
+        lineNumbers: true,
+        theme: 'eclipse',
+        mode: mode,
+        autofocus: true,
+        extraKeys: {
+            "Enter": (cm) => handleInput(cm, {key: 'Enter'}) // Модифицируем обработчик Enter
+        },
+        viewportMargin: Infinity
     });
 
-    // Устанавливаем фокус на редактор
-    appState.editor.focus();
+    // Устанавливаем высоту как у примера кода
+    appState.editor.setSize(null, sampleHeight);
+};
+
+const displayCodeSample = (index) => {
+    const codeBlock = document.querySelector('.sample');
+    const item = textArray[index];
+    if (!item) return;
+
+    codeBlock.innerHTML = '';
+    
+    const mode = item.highlightName === 'python' ? 'python' : 'text/x-c++src';
+
+    const sampleEditor = CodeMirror(codeBlock, {
+        value: item.code,
+        lineNumbers: true,
+        theme: 'eclipse',
+        mode: mode,
+        readOnly: 'nocursor',
+        viewportMargin: Infinity
+    });
+
+    // Возвращаем высоту редактора для использования в createInputField
+    return sampleEditor.getWrapperElement().offsetHeight;
 };
 
 // API functions
@@ -173,61 +165,27 @@ const getDictionaryInfo = async () => {
 
 const getCodeBlock = async (dictionaryName) => {
     if (!dictionaryName) throw new Error('No dictionary selected');
-    console.log('Fetching code block for dictionary:', dictionaryName);
     const data = await fetchData(`controllers/CodeController.php?action=getCodes&dictionaryName=${encodeURIComponent(dictionaryName)}`);
-    console.log('Data received:', data);
-    if (!Array.isArray(data)) {
-        console.error('Expected an array but got:', data);
-        throw new Error('Invalid data format received from server');
-    }
-
-    if (data.length === 0) {
-        console.error('Ошибка: сервер вернул пустой массив кодов.');
-        throw new Error('No codes available for the selected dictionary.');
-    }
-
+    
     textArray = data.map(item => ({
         idCode: item.idCode,
         code: item.Code,
-        highlightName: item.HighlightName
+        highlightName: item.highlightName || (dictionaryName === 'python' ? 'python' : 'cpp')
     }));
 
     const codeBlock = document.querySelector('.sample');
-    if (!codeBlock) throw new Error('Code block element not found');
     codeBlock.style.display = 'block';
     appState.numberOfChars = textArray.reduce((total, item) => total + item.code.length, 0);
     codeBlock.innerHTML = '';
 
-    textArray.forEach(item => {
-        const pre = createElement('pre', {}, { margin: '0' });
-        const code = createElement('code', { className: item.highlightName, textContent: item.code }, { display: 'block' });
-        pre.appendChild(code);
-        codeBlock.appendChild(pre);
-        hljs.highlightBlock(code);
-    });
-};
-
-// UI functions
-const displayCodeSample = (index) => {
-    const codeBlock = document.querySelector('.sample');
-    const item = textArray[index];
-    if (!item) return;
-
-    codeBlock.innerHTML = ''; // Очищаем блок
-
-    const { EditorView, EditorState, basicSetup, python, cpp, oneDark } = window.CodeMirrorModules;
-
-    // Определяем язык подсветки
-    const languageExtension = item.highlightName === 'python' ? python() : cpp();
-
-    // Создаём редактор CodeMirror для отображения примера кода
-    new EditorView({
-        state: EditorState.create({
-            doc: item.code, // Текст кода
-            extensions: [basicSetup, languageExtension, oneDark, EditorView.editable.of(false)], // Только для чтения
-        }),
-        parent: codeBlock,
-    });
+    // Если один элемент - показываем весь код
+    if (textArray.length === 1) {
+        displayCodeSample(0);
+    } 
+    // Если несколько элементов - показываем первый
+    else if (textArray.length > 1) {
+        displayCodeSample(0);
+    }
 };
 
 const setupInputHandler = () => {
@@ -236,71 +194,39 @@ const setupInputHandler = () => {
         console.error('Ошибка: editor не инициализирован.');
         return;
     }
-    editor.addEventListener('keydown', handleInput); // Добавляем обработчик событий
+    // Заменяем addEventListener на правильный метод CodeMirror
+    editor.on('keydown', handleInput); // Используем CodeMirror's event system
     editor.focus(); // Устанавливаем фокус на поле ввода
 };
 
-// const handleInput = (event) => {
-//     if (!appState.timeStart) appState.timeStart = new Date();
-
-//     const currentText = textArray[appState.currentArrayIndex].code.trim(); // Текущая строка кода
-//     const userInput = appState.editor.value.trim(); // Ввод пользователя
-
-//     const isTextarea = appState.editor.tagName.toLowerCase() === 'textarea';
-
-//     // Условие для проверки ввода
-//     if ((isTextarea && event.key === 'Enter' && event.shiftKey) || (!isTextarea && event.key === 'Enter')) {
-//         event.preventDefault(); // Предотвращаем стандартное поведение Enter
-
-//         if (userInput === currentText) {
-//             appState.userNumberOfCharacters += userInput.length;
-//             appState.editor.value = ''; // Очищаем поле ввода
-
-//             if (appState.currentArrayIndex < textArray.length - 1) {
-//                 appState.currentArrayIndex++;
-//                 displayCodeSample(appState.currentArrayIndex); // Отображаем следующую строку
-//             } else {
-//                 endSession(); // Завершаем попытку
-//             }
-//         } else {
-//             appState.editor.classList.add('error'); // Подсвечиваем ошибку
-//             setTimeout(() => appState.editor.classList.remove('error'), 1000); // Убираем подсветку через 1 секунду
-//         }
-//     }
-// };
-
-const handleInput = (event) => {
-    if (!appState.timeStart) appState.timeStart = new Date();
-
-    const currentText = textArray[appState.currentArrayIndex].code.trim(); // Текущая строка кода
-    const userInput = appState.editor.state.doc.toString().trim(); // Ввод пользователя через CodeMirror
-
-    // Условие для проверки ввода
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Предотвращаем стандартное поведение Enter
+const handleInput = (editor, event) => {
+    // Проверяем, была ли нажата клавиша Enter
+    if (event.keyCode === 13 || event.key === 'Enter') {
+        if (!appState.timeStart) appState.timeStart = new Date();
+        
+        const currentItem = textArray[appState.currentArrayIndex];
+        const currentText = currentItem.code.trim();
+        const userInput = editor.getValue().trim();
 
         if (userInput === currentText) {
             appState.userNumberOfCharacters += userInput.length;
-            appState.editor.dispatch({
-                changes: { from: 0, to: appState.editor.state.doc.length, insert: '' }, // Очищаем поле ввода
-            });
+            editor.setValue('');
 
-            if (appState.currentArrayIndex < textArray.length - 1) {
+            // Если несколько элементов и не последний - показываем следующий
+            if (textArray.length > 1 && appState.currentArrayIndex < textArray.length - 1) {
                 appState.currentArrayIndex++;
-                displayCodeSample(appState.currentArrayIndex); // Отображаем следующую строку
-            } else {
-                endSession(); // Завершаем попытку
+                displayCodeSample(appState.currentArrayIndex);
+                // Обновляем высоту поля ввода
+                const sampleHeight = document.querySelector('.sample .CodeMirror').getWrapperElement().offsetHeight;
+                editor.setSize(null, sampleHeight);
+            } 
+            // Если последний элемент - завершаем сессию
+            else {
+                endSession();
             }
         } else {
-            // Подсвечиваем ошибку
-            appState.editor.dispatch({
-                effects: EditorView.theme.of({ "&": { backgroundColor: "#ffdddd" } }),
-            });
-            setTimeout(() => {
-                appState.editor.dispatch({
-                    effects: EditorView.theme.of({ "&": { backgroundColor: "white" } }),
-                });
-            }, 1000);
+            editor.display.wrapper.classList.add('error');
+            setTimeout(() => editor.display.wrapper.classList.remove('error'), 1000);
         }
     }
 };
@@ -321,8 +247,8 @@ const endSession = () => {
     // Отображаем статистику
     document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfLines}`;
     document.getElementById('numberOfChars').textContent = `Количество символов из словаря: ${appState.numberOfChars}`;
-    document.getElementById('time').textContent = `Время: ${elapsedTime.toFixed(1)} с`;
-    document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(2)} симв в мин`;
+    document.getElementById('time').textContent = `Время: ${Math.round(elapsedTime)} с`;
+    document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минунуту`;
     // Скрываем ненужные элементы
     document.querySelector('.sample').style.display = 'none';
     document.getElementById('input').style.display = 'none';
