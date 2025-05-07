@@ -3,11 +3,23 @@ const appState = {
     userNumberOfCharacters: 0,
     currentArrayIndex: 0,
     numberOfChars: undefined,
+    
+    // Новые переменные для метрик "грязности"
+    totalErrors: 0,
+    totalAttempts: 0,
+    correctChars: 0,
+    backspaceCount: 0,
+    
     reset(fullReset = false) {
         this.timeStart = null;
         this.userNumberOfCharacters = 0;
         this.currentArrayIndex = 0;
         this.numberOfChars = undefined;
+        
+        this.totalErrors = 0;
+        this.totalAttempts = 0;
+        this.correctChars = 0;
+        this.backspaceCount = 0;
 
         if (fullReset) {
             textArray = [];
@@ -132,7 +144,10 @@ const checkInput = (editor) => {
     const currentText = normalizeWhitespace(currentItem.code);
     const userInput = normalizeWhitespace(editor.getValue());
     
+    appState.totalAttempts++;
+    
     if (userInput === currentText) {
+        appState.correctChars += currentText.length;
         appState.userNumberOfCharacters += currentText.length;
         editor.setValue('');
 
@@ -146,6 +161,7 @@ const checkInput = (editor) => {
             endSession();
         }
     } else {
+        appState.totalErrors++;
         editor.getWrapperElement().classList.add('cm-error');
         setTimeout(() => {
             editor.getWrapperElement().classList.remove('cm-error');
@@ -279,13 +295,20 @@ const setupInputHandler = () => {
     const firstInputHandler = () => {
         if (!appState.timeStart) {
             appState.timeStart = new Date();
-            console.log(`начало ${appState.timeStart}`);
             editor.off('change', firstInputHandler);
         }
     };
     
     editor.on('change', firstInputHandler);
-    editor.on('keydown', handleInput);
+    
+    // Обработчик для подсчета backspace
+    editor.on('keydown', (cm, event) => {
+        if (event.key === 'Backspace') {
+            appState.backspaceCount++;
+        }
+        handleInput(cm, event);
+    });
+    
     editor.focus();
 };
 
@@ -305,37 +328,31 @@ const endSession = () => {
         console.error("Error: timeStart not set.");
         return;
     }
-    timeEnd = new Date();
-    console.log(`endSession timestart: ${appState.timeStart}`);
-    console.log(`timeEnd ${timeEnd}`);
-
+    
+    const timeEnd = new Date();
     const elapsedTime = Math.max((timeEnd - appState.timeStart) / 1000, 0.1);
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
     
-    const numberOfLines = textArray.length;
-
-    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfLines}`;
+    // Расчет метрик "грязности"
+    const errorRate = (appState.totalErrors / appState.totalAttempts) * 100;
+    const cleanliness = (appState.correctChars / totalCharCount) * 100;
+    const dirtinessIndex = (appState.totalErrors / totalCharCount) * 1000;
+    
+    // Вывод результатов
+    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
     document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;
     document.getElementById('time').textContent = `Время: ${Math.trunc(elapsedTime)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минуту`;
+    document.getElementById('error-rate').textContent = `Процент ошибок: ${errorRate.toFixed(1)}%`;
+    document.getElementById('cleanliness').textContent = `Чистота набора: ${cleanliness.toFixed(1)}%`;
+    document.getElementById('dirtiness').textContent = `Индекс грязности: ${dirtinessIndex.toFixed(1)}`;
+    document.getElementById('backspaces').textContent = `Исправлений (Backspace): ${appState.backspaceCount}`;
     
     document.querySelector('.sample').style.display = 'none';
     document.getElementById('input-container').style.display = 'none';
     
     setAppStateClass('output');
-    
-    // console.log(
-    //     elapsedTime.toFixed(3),
-    //     totalCharCount,
-    //     timeEnd.toString(),
-    //     appState.timeStart.toString(), 
-    //     username, 
-    //     elapsedTime, 
-    //     speed, 
-    //     appState.userNumberOfCharacters, 
-    //     numberOfLines
-    // );
     
     saveSessionData(
         appState.timeStart, 
@@ -343,8 +360,20 @@ const endSession = () => {
         elapsedTime, 
         speed, 
         appState.userNumberOfCharacters, 
-        numberOfLines
+        textArray.length
     );
+    // saveSessionData(
+    //     appState.timeStart, 
+    //     username, 
+    //     elapsedTime, 
+    //     speed, 
+    //     appState.userNumberOfCharacters, 
+    //     textArray.length,
+    //     errorRate,
+    //     cleanliness,
+    //     dirtinessIndex,
+    //     appState.backspaceCount
+    // );
 };
 
 function formatDateToMySQL(date) {

@@ -41,6 +41,12 @@ $controller->handleRequest();
                 <div id="speed"></div>
                 <div id="numberOfCodes"></div>
                 <div id="numberOfChars"></div>
+
+                <div id="error-rate"></div>
+                <div id="cleanliness"></div>
+                <div id="dirtiness"></div>
+                <div id="backspaces"></div>
+                
                 <button id="again">Повторить</button>
                 <button id="back-to-menu">Вернуться в меню</button>
             </div>
