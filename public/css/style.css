@@ -21,6 +21,8 @@
       color: var(--text);
       min-height: 100vh;
       box-sizing: border-box;
+      justify-content: center; /* Вертикальное центрирование */
+      align-items: center; /* Горизонтальное центрирование */
   }
   
   .container {
@@ -29,7 +31,9 @@
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
       padding: 30px;
       max-width: 800px;
-      margin: 0 auto;
+      width: 90%; /* Добавляем относительную ширину */
+      margin: 30px auto; /* Автоматические отступы по бокам и сверху/снизу */
+      
   }
   
   h2 {
@@ -79,52 +83,45 @@
   }
   
   /* Блоки кода */
-  .code-container {
+  /* .code-container {
       margin: 20px 0;
   }
   
   .sample, #input-container {
       margin-bottom: 15px;
-  }
-  
-  /* Стили CodeMirror */
-  .CodeMirror {
-      font-family: 'Roboto Mono', Consolas, monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      border: 1px solid var(--border-light);
-      border-radius: 4px;
-      height: auto;
-  }
-  
-  .CodeMirror-focused {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(33, 133, 208, 0.2);
-  }
-  
-  /* Редактор ввода */
-  #input-container .CodeMirror {
-      background-color: #f6f8fa;
-      min-height: 100px;
-  }
-  
-  /* Пример кода (только чтение) */
-  .sample .CodeMirror {
-      background-color: #fafbfc;
-  }
-  
-  /* Ошибка */
-  .CodeMirror.error {
-      border-color: var(--danger);
-      animation: shake 0.5s;
-  }
-  
-  @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-3px); }
-      40%, 80% { transform: translateX(3px); }
-  }
-  
+  } */
+
+    /* Стили CodeMirror */
+        .CodeMirror {
+        font-family: 'Roboto Mono', Consolas, monospace;
+        font-size: 16px; /* Увеличили размер шрифта */
+        line-height: 1.5;
+        border: 2px solid #d4d4d5; /* Более четкая граница */
+        border-radius: 4px;
+        height: auto !important;
+        background-color: #fafafa;
+    }
+
+    .sample .CodeMirror {
+        background-color: #f5f5f5;
+        border-color: #c1c1c1;
+    }
+
+    #input-container .CodeMirror {
+        background-color: #ffffff;
+        border-color: #2185d0;
+    }
+
+    .cm-error {
+        border-color: #db2828 !important;
+        animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-3px); }
+        40%, 80% { transform: translateX(3px); }
+    }
   /* Статистика */
   .output {
       margin-top: 30px;

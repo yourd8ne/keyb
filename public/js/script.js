@@ -1,4 +1,3 @@
-
 const appState = {
     timeStart: null,
     userNumberOfCharacters: 0,
@@ -17,12 +16,9 @@ const appState = {
     }
 };
 
-// Global variables
 let textArray = [];
 let selectedDictionaryName = '';
-//let numberOfCodes;
 
-// Utility functions
 const createElement = (tag, attributes = {}, styles = {}) => {
     const element = document.createElement(tag);
     Object.assign(element, attributes);
@@ -39,21 +35,26 @@ const setAppStateClass = (stateClass) => {
     const againButton = document.getElementById('again');
     const backToMenuButton = document.getElementById('back-to-menu');
 
-    // Сбрасываем состояния
+    const mainHeader = document.getElementById('main-header');
+
     preparation.style.display = 'none';
     processing.style.display = 'none';
     output.style.display = 'none';
     readyButton.style.display = 'none';
     sample.setAttribute('inert', '');
 
-    // Устанавливаем новое состояние
     if (stateClass === 'preparation') {
+        // output.style.display = 'none';
+        mainHeader.textContent = 'Практика набора кода';
         preparation.style.display = 'block';
         readyButton.style.display = 'block';
     } else if (stateClass === 'processing') {
+        mainHeader.style.display = 'none';
         processing.style.display = 'block';
         sample.removeAttribute('inert');
     } else if (stateClass === 'output') {
+        mainHeader.textContent = 'Результаты попытки';
+        mainHeader.style.display = 'block';
         output.style.display = 'block';
         againButton.style.display = 'block';
         backToMenuButton.style.display = 'block';
@@ -74,10 +75,89 @@ const showElements = (...ids) => {
     });
 };
 
-// Function to auto-expand the input field
-const autoExpandInput = (inputElement) => {
-    inputElement.style.height = 'auto'; // Сбрасываем высоту
-    inputElement.style.height = `${inputElement.scrollHeight}px`; // Устанавливаем высоту на основе содержимого
+const createMultiLineEditor = (container, mode, lineCount) => {
+    const editor = CodeMirror(container, {
+        lineNumbers: true,
+        theme: 'eclipse',
+        mode: mode,
+        autofocus: true,
+        extraKeys: {
+            "Shift-Enter": (cm) => checkInput(cm),
+            "Ctrl-Enter": (cm) => checkInput(cm)
+        },
+        viewportMargin: Infinity,
+        lineWrapping: false,
+        readOnly: false,
+        indentUnit: 4,
+        tabSize: 4,
+        electricChars: false
+    });
+    
+    const lineHeight = 24;
+    editor.setSize(null, lineCount * lineHeight);
+    
+    editor.on("beforeChange", function(cm, change) {
+        const newlineCount = change.text.join("").split('\n').length - 1;
+        if (newlineCount > 0) {
+            change.cancel();
+        }
+    });
+    
+    return editor;
+};
+
+const createSingleLineEditor = (container, mode) => {
+    const editor = CodeMirror(container, {
+        lineNumbers: false,
+        theme: 'eclipse',
+        mode: mode,
+        autofocus: true,
+        extraKeys: {
+            "Enter": (cm) => checkInput(cm)
+        },
+        viewportMargin: Infinity,
+        lineWrapping: false,
+        indentUnit: 4,
+        tabSize: 4
+    });
+    
+    editor.setSize(null, 28);
+    editor.getWrapperElement().style.overflow = 'hidden';
+    
+    return editor;
+};
+
+const checkInput = (editor) => {
+    const currentItem = textArray[appState.currentArrayIndex];
+    const currentText = normalizeWhitespace(currentItem.code);
+    const userInput = normalizeWhitespace(editor.getValue());
+    
+    if (userInput === currentText) {
+        appState.userNumberOfCharacters += currentText.length;
+        editor.setValue('');
+
+        if (textArray.length > 1 && appState.currentArrayIndex < textArray.length - 1) {
+            appState.currentArrayIndex++;
+            displayCodeSample(appState.currentArrayIndex);
+            setTimeout(() => {
+                editor.focus();
+            }, 0);
+        } else {
+            endSession();
+        }
+    } else {
+        editor.getWrapperElement().classList.add('cm-error');
+        setTimeout(() => {
+            editor.getWrapperElement().classList.remove('cm-error');
+        }, 1000);
+    }
+};
+
+const normalizeWhitespace = (str) => {
+    return str
+        .replace(/\t/g, '    ')
+        .trim()
+        .replace(/\s+/g, ' ');
 };
 
 const createInputField = () => {
@@ -86,30 +166,27 @@ const createInputField = () => {
     inputContainer.style.display = 'block';
 
     const mode = selectedDictionaryName === 'python' ? 'python' : 'text/x-c++src';
+    const lineCount = getSampleLineCount();
+
+    if (textArray.length === 1) {
+        appState.editor = createMultiLineEditor(inputContainer, mode, lineCount);
+    } else {
+        appState.editor = createSingleLineEditor(inputContainer, mode);
+    }
     
-    // Safer way to get sample height
-    let sampleHeight = 300;
     const sampleEditor = document.querySelector('.sample .CodeMirror');
     if (sampleEditor && sampleEditor.CodeMirror) {
-        sampleHeight = sampleEditor.CodeMirror.getWrapperElement().offsetHeight;
-    } else if (sampleEditor) {
-        // Fallback if CodeMirror instance isn't directly available
-        sampleHeight = sampleEditor.offsetHeight;
+        const height = sampleEditor.CodeMirror.getWrapperElement().offsetHeight;
+        appState.editor.setSize(null, height);
     }
+};
 
-    appState.editor = CodeMirror(inputContainer, {
-        lineNumbers: true,
-        theme: 'eclipse',
-        mode: mode,
-        autofocus: true,
-        extraKeys: {
-            "Enter": (cm) => handleInput(cm, {key: 'Enter'}) // Модифицируем обработчик Enter
-        },
-        viewportMargin: Infinity
-    });
-
-    // Устанавливаем высоту как у примера кода
-    appState.editor.setSize(null, sampleHeight);
+const getSampleLineCount = () => {
+    const sampleEditor = document.querySelector('.sample .CodeMirror');
+    if (sampleEditor && sampleEditor.CodeMirror) {
+        return sampleEditor.CodeMirror.lineCount();
+    }
+    return 1;
 };
 
 const displayCodeSample = (index) => {
@@ -120,21 +197,29 @@ const displayCodeSample = (index) => {
     codeBlock.innerHTML = '';
     
     const mode = item.highlightName === 'python' ? 'python' : 'text/x-c++src';
+    const isSingleLineMode = textArray.length > 1;
+    const lineCount = isSingleLineMode ? 1 : item.code.split('\n').length;
 
     const sampleEditor = CodeMirror(codeBlock, {
         value: item.code,
-        lineNumbers: true,
+        lineNumbers: !isSingleLineMode,
         theme: 'eclipse',
         mode: mode,
         readOnly: 'nocursor',
-        viewportMargin: Infinity
+        viewportMargin: Infinity,
+        lineWrapping: false
     });
 
-    // Возвращаем высоту редактора для использования в createInputField
-    return sampleEditor.getWrapperElement().offsetHeight;
+    sampleEditor.setSize(null, lineCount * 24);
+    
+    if (appState.editor) {
+        appState.editor.setSize(null, lineCount * 24);
+        appState.editor.refresh();
+    }
+
+    return sampleEditor;
 };
 
-// API functions
 const fetchData = async (url, options = {}) => {
     try {
         const response = await fetch(url, options);
@@ -162,7 +247,6 @@ const getDictionaryInfo = async () => {
     }
 };
 
-
 const getCodeBlock = async (dictionaryName) => {
     if (!dictionaryName) throw new Error('No dictionary selected');
     const data = await fetchData(`controllers/CodeController.php?action=getCodes&dictionaryName=${encodeURIComponent(dictionaryName)}`);
@@ -178,12 +262,9 @@ const getCodeBlock = async (dictionaryName) => {
     appState.numberOfChars = textArray.reduce((total, item) => total + item.code.length, 0);
     codeBlock.innerHTML = '';
 
-    // Если один элемент - показываем весь код
     if (textArray.length === 1) {
         displayCodeSample(0);
-    } 
-    // Если несколько элементов - показываем первый
-    else if (textArray.length > 1) {
+    } else if (textArray.length > 1) {
         displayCodeSample(0);
     }
 };
@@ -191,71 +272,79 @@ const getCodeBlock = async (dictionaryName) => {
 const setupInputHandler = () => {
     const editor = appState.editor;
     if (!editor) {
-        console.error('Ошибка: editor не инициализирован.');
+        console.error('Error: editor not initialized.');
         return;
     }
-    // Заменяем addEventListener на правильный метод CodeMirror
-    editor.on('keydown', handleInput); // Используем CodeMirror's event system
-    editor.focus(); // Устанавливаем фокус на поле ввода
+    
+    const firstInputHandler = () => {
+        if (!appState.timeStart) {
+            appState.timeStart = new Date();
+            console.log(`начало ${appState.timeStart}`);
+            editor.off('change', firstInputHandler);
+        }
+    };
+    
+    editor.on('change', firstInputHandler);
+    editor.on('keydown', handleInput);
+    editor.focus();
 };
 
 const handleInput = (editor, event) => {
-    // Проверяем, была ли нажата клавиша Enter
-    if (event.keyCode === 13 || event.key === 'Enter') {
-        if (!appState.timeStart) appState.timeStart = new Date();
-        
-        const currentItem = textArray[appState.currentArrayIndex];
-        const currentText = currentItem.code.trim();
-        const userInput = editor.getValue().trim();
-
-        if (userInput === currentText) {
-            appState.userNumberOfCharacters += userInput.length;
-            editor.setValue('');
-
-            // Если несколько элементов и не последний - показываем следующий
-            if (textArray.length > 1 && appState.currentArrayIndex < textArray.length - 1) {
-                appState.currentArrayIndex++;
-                displayCodeSample(appState.currentArrayIndex);
-                // Обновляем высоту поля ввода
-                const sampleHeight = document.querySelector('.sample .CodeMirror').getWrapperElement().offsetHeight;
-                editor.setSize(null, sampleHeight);
-            } 
-            // Если последний элемент - завершаем сессию
-            else {
-                endSession();
-            }
-        } else {
-            editor.display.wrapper.classList.add('error');
-            setTimeout(() => editor.display.wrapper.classList.remove('error'), 1000);
-        }
+    const shouldCheck = 
+        (textArray.length > 1 && event.key === 'Enter') || 
+        (textArray.length === 1 && (event.ctrlKey || event.shiftKey) && event.key === 'Enter');
+    
+    if (shouldCheck) {
+        event.preventDefault();
+        checkInput(editor);
     }
 };
 
 const endSession = () => {
-    const timeEnd = new Date();
     if (!appState.timeStart) {
-        console.error("Ошибка: timeStart не был установлен.");
+        console.error("Error: timeStart not set.");
         return;
     }
-    // Рассчитываем статистику
-    const elapsedTime = (timeEnd - appState.timeStart) / 1000;
+    timeEnd = new Date();
+    console.log(`endSession timestart: ${appState.timeStart}`);
+    console.log(`timeEnd ${timeEnd}`);
+
+    const elapsedTime = Math.max((timeEnd - appState.timeStart) / 1000, 0.1);
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
-    const numberOfLines = textArray.length === 1
-    ? textArray[0].code.split('\n').length // Если один блок, считаем строки
-    : textArray.length; // Если несколько блоков, считаем их количество
-    // Отображаем статистику
+    
+    const numberOfLines = textArray.length;
+
     document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfLines}`;
-    document.getElementById('numberOfChars').textContent = `Количество символов из словаря: ${appState.numberOfChars}`;
-    document.getElementById('time').textContent = `Время: ${Math.round(elapsedTime)} с`;
-    document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минунуту`;
-    // Скрываем ненужные элементы
+    document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;
+    document.getElementById('time').textContent = `Время: ${Math.trunc(elapsedTime)} с`;
+    document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минуту`;
+    
     document.querySelector('.sample').style.display = 'none';
-    document.getElementById('input').style.display = 'none';
-    // Показываем блок с результатами
-    setAppStateClass('output'); // Переключаемся в состояние вывода статистики
-    // Сохраняем данные сессии
-    saveSessionData(appState.timeStart, username, elapsedTime, speed, appState.userNumberOfCharacters, numberOfLines);
+    document.getElementById('input-container').style.display = 'none';
+    
+    setAppStateClass('output');
+    
+    // console.log(
+    //     elapsedTime.toFixed(3),
+    //     totalCharCount,
+    //     timeEnd.toString(),
+    //     appState.timeStart.toString(), 
+    //     username, 
+    //     elapsedTime, 
+    //     speed, 
+    //     appState.userNumberOfCharacters, 
+    //     numberOfLines
+    // );
+    
+    saveSessionData(
+        appState.timeStart, 
+        username, 
+        elapsedTime, 
+        speed, 
+        appState.userNumberOfCharacters, 
+        numberOfLines
+    );
 };
 
 function formatDateToMySQL(date) {
@@ -270,7 +359,7 @@ function formatDateToMySQL(date) {
 
 const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters, numberOfLines) => {
     if (!selectedDictionaryName) {
-        console.error('Ошибка: не выбран словарь перед сохранением.');
+        console.error('Error: dictionary not selected before saving.');
         return;
     }
     const attemptTime = formatDateToMySQL(fullAttemptTime);
@@ -283,7 +372,7 @@ const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumber
         speed: speed,
         userNumberOfCharacters: userNumberOfCharacters,
         userNumberOfSnippets: numberOfLines,
-        idCodes: codeIds // Передаем массив ID кодов
+        idCodes: codeIds
     };
     fetch('controllers/SessionController.php', {
         method: 'POST',
@@ -293,13 +382,11 @@ const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumber
         body: JSON.stringify(data)
     }).catch(error => {
         console.error('Error:', error);
-        console.log('Server returned:', error.responseText);
     });
 };
 
 const resetApp = (fullReset = false) => {
     if (fullReset) {
-        // Возвращаемся в состояние подготовки
         setAppStateClass('preparation');
         const input = document.getElementById('input');
         if (input) {
@@ -307,11 +394,9 @@ const resetApp = (fullReset = false) => {
             input.removeEventListener('keydown', handleInput);
         }
         appState.reset(fullReset);
-        // Очищаем контейнеры
         document.getElementById('input-container').innerHTML = '';
         document.querySelector('.sample').innerHTML = '';
     } else {
-        // Возвращаемся в состояние обработки
         setAppStateClass('processing');
         setupInputHandler();
     }
@@ -319,8 +404,8 @@ const resetApp = (fullReset = false) => {
 
 // Event listeners
 window.addEventListener('load', async () => {
-    //await getNumberOfCodes();
     await getDictionaryInfo();
+    setAppStateClass('preparation');
     document.getElementById('ready').addEventListener('click', async () => {
         selectedDictionaryName = document.getElementById('prog-lang').value;
 
@@ -329,26 +414,22 @@ window.addEventListener('load', async () => {
             return;
         }
 
-        setAppStateClass('processing'); // Устанавливаем состояние обработки
-
+        setAppStateClass('processing');
         await getCodeBlock(selectedDictionaryName);
-        createInputField(); // Создаём поле ввода
-        setupInputHandler(); // Настраиваем обработчик ввода
+        createInputField();
+        setupInputHandler();
     });
 
     document.getElementById('again').addEventListener('click', async () => {
         appState.reset(false);
         setAppStateClass('processing');
-
         await getCodeBlock(selectedDictionaryName);
-        createInputField(); // Создаём поле ввода
-        setupInputHandler(); // Настраиваем обработчик ввода
+        createInputField();
+        setupInputHandler();
     });
 
     document.getElementById('back-to-menu').addEventListener('click', () => {
-        // Полный сброс приложения
         resetApp(true);
-        // Сбрасываем контейнеры для ввода и примеров кода
         document.getElementById('input-container').innerHTML = '';
         document.querySelector('.sample').innerHTML = '';
     });

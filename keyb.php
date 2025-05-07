@@ -18,7 +18,7 @@ $controller->handleRequest();
 </head>
 <body>
     <div class="container">
-        <h2>Практика набора кода</h2>
+        <h2 id='main-header'>Практика набора кода</h2>
         <div class="preparation">
             <a href="attempts.php" id="attempts_button">View Attempts</a>
             <form class="choose">
