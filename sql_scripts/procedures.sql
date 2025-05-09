@@ -34,41 +34,6 @@ BEGIN
     LIMIT 1;
 END //
 
--- CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
--- BEGIN
---     DECLARE id_Dictionary INT;
---     DECLARE id_Language INT;
---     DECLARE numberOfCodesForStudent INT;
-
---     -- Получаем id словаря, язык и количество кодов для студента
---     SELECT idDictionary, Languages_idLanguage, NumberOfCodesForStudent
---     INTO id_Dictionary, id_Language, numberOfCodesForStudent
---     FROM Dictionaries
---     WHERE Name = dictionaryName
---     LIMIT 1;
-
---     -- Проверка, что словарь найден
---     IF id_Dictionary IS NOT NULL THEN
---         -- Проверка, что количество кодов для студента не NULL
---         IF numberOfCodesForStudent IS NOT NULL THEN
---             -- Возвращаем случайные строки из словаря
---             SELECT dc.Code, l.HighlightName, dc.idCode
---             FROM Dictionary_Codes dc
---             JOIN Languages l ON l.idLanguage = id_Language
---             WHERE dc.Dictionaries_idDictionary = id_Dictionary
---             ORDER BY RAND()
---             LIMIT numberOfCodesForStudent;
---         ELSE
---             SIGNAL SQLSTATE '45000'
---             SET MESSAGE_TEXT = 'NumberOfCodesForStudent is NULL';
---         END IF;
---     ELSE
---         -- Если словарь не найден, выбрасываем ошибку
---         SIGNAL SQLSTATE '45000'
---         SET MESSAGE_TEXT = 'Dictionary not found';
---     END IF;
--- END //
-
 CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
 BEGIN
     DECLARE id_Dictionary INT;
@@ -122,7 +87,9 @@ CREATE PROCEDURE saveSessionData(
     IN timeSpent DOUBLE,
     IN speed DOUBLE,
     IN userNumberOfCharacters INT,
-    IN userNumberOfSnippets INT
+    IN userNumberOfSnippets INT,
+    IN dirtinessIndex DOUBLE,
+    IN backspaceCount INT
 )
 BEGIN
     DECLARE userId INT;
@@ -153,8 +120,30 @@ BEGIN
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempts (Date, Time, idUser, idDictionary, inClass, Speed, UserNumberOfCharacters, UserNumberOfSnippets)
-    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, userNumberOfCharacters, userNumberOfSnippets);
+    INSERT INTO Attempts (
+        Date, 
+        Time, 
+        idUser, 
+        idDictionary, 
+        inClass, 
+        Speed, 
+        UserNumberOfCharacters, 
+        UserNumberOfSnippets,
+        DirtinessIndex,
+        BackspaceCount
+    )
+    VALUES (
+        attemptTime, 
+        SEC_TO_TIME(timeSpent), 
+        userId, 
+        dictId, 
+        1, 
+        speed, 
+        userNumberOfCharacters, 
+        userNumberOfSnippets,
+        dirtinessIndex,
+        backspaceCount
+    );
 END //
 
 CREATE PROCEDURE saveCodeForSession(
@@ -210,7 +199,9 @@ BEGIN
         a.inClass,
         ROUND(a.Speed, 2) AS Speed,
         a.UserNumberOfCharacters,
-        a.UserNumberOfSnippets
+        a.UserNumberOfSnippets,
+        a.DirtinessIndex,
+        a.BackspaceCount
     FROM
         Attempts a
     LEFT JOIN
@@ -218,76 +209,6 @@ BEGIN
     LEFT JOIN
         Dictionaries d ON a.idDictionary = d.idDictionary;
 END //
-
-
--- CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
--- BEGIN
---     DECLARE user_exists INT;
-    
---     -- Проверяем существование пользователя
---     SELECT COUNT(*) INTO user_exists FROM Users WHERE idUsers = p_user_id;
-    
---     IF user_exists = 0 THEN
---         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
---     ELSE
---         -- Основной запрос для расчёта статистики
---         SELECT 
---             COUNT(*) AS attempts_count,
---             AVG(Speed) AS mean_speed,
---             MAX(Speed) AS max_speed,
-            
---             -- Медиана (50-й перцентиль)
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.5)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS median_speed,
-            
---             -- 95-й перцентиль
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.95)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS percentile_95,
-            
---             -- 3-й квартиль (75-й перцентиль)
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.75)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS quartile_3,
-            
---             AVG(UserNumberOfCharacters) AS avg_chars,
---             AVG(UserNumberOfSnippets) AS avg_snippets,
---             SUM(CASE WHEN inClass = 1 THEN 1 ELSE 0 END) AS in_class_count
---         FROM Attempts
---         WHERE idUser = p_user_id;
---     END IF;
--- END //
 
 CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
 BEGIN

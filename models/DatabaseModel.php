@@ -35,18 +35,6 @@ class DatabaseModel {
             return ['error' => $e->getMessage()];
         }
     }
-    
-    // public function getNumberOfCodes() {
-    //     $sql = "CALL getNumberOfCodes;";
-
-    //     $res = $this->conn->query($sql);
-        
-    //     if ($res && $row = $res->fetch_assoc()) {
-    //         return (int)$row['Value'];
-    //     } else {
-    //         return 0;
-    //     }
-    // }
 
     public function getDictionariesInfo() {
         $sql = "CALL getDictionariesInfo()";
@@ -110,17 +98,28 @@ class DatabaseModel {
         return $result;
     }
 
-    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $userNumberOfCharacters, $userNumberOfSnippets) {
+    public function saveSessionData($attemptTime, $username, $selectedDict, $timeSpent, $speed, $userNumberOfCharacters, $userNumberOfSnippets, $dirtinessIndex, $backspaceCount) {
     
         // Подготовка запроса
-        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("CALL saveSessionData(?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
         if (!$stmt) {
             throw new Exception("Не удалось подготовить запрос: " . $this->conn->error);
         }
         
         // Передаем параметры в bind_param
-        $stmt->bind_param("sssddii", $attemptTime, $username, $selectedDict, $timeSpent, $speed, $userNumberOfCharacters, $userNumberOfSnippets);
+        $stmt->bind_param(
+            "sssddiidd", 
+            $attemptTime, 
+            $username, 
+            $selectedDict, 
+            $timeSpent, 
+            $speed, 
+            $userNumberOfCharacters, 
+            $userNumberOfSnippets,
+            $dirtinessIndex,
+            $backspaceCount
+        );
         
         if (!$stmt->execute()) {
             throw new Exception("Ошибка выполнения запроса: " . $stmt->error);

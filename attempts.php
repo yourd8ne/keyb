@@ -13,12 +13,39 @@ $controller->closeModelConnection();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>История попыток</title>
     <style>
-        body { font-family: Arial, sans-serif; }
+        body { font-family: Arial, sans-serif; padding: 40px;}
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        th { background-color: #f2f2f2; position: relative; }
         a { color: #0066cc; text-decoration: none; }
         a:hover { text-decoration: underline; }
+        .numeric { text-align: right; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #666;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +61,16 @@ $controller->closeModelConnection();
                 <th>Скорость (зн./мин)</th>
                 <th>Символов</th>
                 <th>Фрагментов</th>
+                <th>
+                    <div class="tooltip">Индекс ошибок
+                        <span class="tooltiptext">Показывает соотношение ошибочных нажатий к общему числу нажатий (чем выше, тем больше ошибок)</span>
+                    </div>
+                </th>
+                <th>
+                    <div class="tooltip">Backspace
+                        <span class="tooltiptext">Количество исправлений с помощью Backspace</span>
+                    </div>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -49,14 +86,23 @@ $controller->closeModelConnection();
                         </td>
                         <td><?= htmlspecialchars($attempt['DictionaryName'] ?? '') ?></td>
                         <td><?= $attempt['inClass'] ? 'Да' : 'Нет' ?></td>
-                        <td><?= htmlspecialchars($attempt['Speed'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($attempt['UserNumberOfCharacters'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($attempt['UserNumberOfSnippets'] ?? '') ?></td>
+                        <td class="numeric"><?= htmlspecialchars($attempt['Speed'] ?? '') ?></td>
+                        <td class="numeric"><?= htmlspecialchars($attempt['UserNumberOfCharacters'] ?? '') ?></td>
+                        <td class="numeric"><?= htmlspecialchars($attempt['UserNumberOfSnippets'] ?? '') ?></td>
+                        <td class="numeric">
+                            <div class="tooltip"><?= htmlspecialchars($attempt['DirtinessIndex'] ?? '0') ?>
+                                <span class="tooltiptext">
+                                    <?= $attempt['DirtinessIndex'] >= 0.3 ? 'Много ошибок' : 
+                                       ($attempt['DirtinessIndex'] >= 0.15 ? 'Среднее качество' : 'Хорошее качество') ?>
+                                </span>
+                            </div>
+                        </td>
+                        <td class="numeric"><?= htmlspecialchars($attempt['BackspaceCount'] ?? '0') ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="8">Попытки не найдены</td>
+                    <td colspan="10">Попытки не найдены</td>
                 </tr>
             <?php endif; ?>
         </tbody>

@@ -334,12 +334,17 @@ const endSession = () => {
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
     
-    // Расчет метрик "грязности"
+    // Процент ошибок: сколько раз пользователь ошибался при отправке строки (Enter)
+    // Формула: (количество неверных попыток / общее количество попыток) * 100%
     const errorRate = (appState.totalErrors / appState.totalAttempts) * 100;
+    // Чистота набора: процент правильно введённых символов от общего объёма кода
+    // Формула: (верно введённые символы / общее количество символов в образце) * 100%
     const cleanliness = (appState.correctChars / totalCharCount) * 100;
+    // Индекс грязности: количество ошибок на 1000 символов кода
+    // Умножение на 1000 даёт удобную для восприятия метрику (например, "5 ошибок на 1000 символов")
+    // Формула: (общее количество ошибок / общее количество символов) * 1000
     const dirtinessIndex = (appState.totalErrors / totalCharCount) * 1000;
     
-    // Вывод результатов
     document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
     document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;
     document.getElementById('time').textContent = `Время: ${Math.trunc(elapsedTime)} с`;
@@ -347,6 +352,8 @@ const endSession = () => {
     document.getElementById('error-rate').textContent = `Процент ошибок: ${errorRate.toFixed(1)}%`;
     document.getElementById('cleanliness').textContent = `Чистота набора: ${cleanliness.toFixed(1)}%`;
     document.getElementById('dirtiness').textContent = `Индекс грязности: ${dirtinessIndex.toFixed(1)}`;
+    // Количество нажатий Backspace: показывает, как часто пользователь исправлял ввод до проверки
+    // Важно: учитываются только исправления, не приведшие к ошибке (ошибочные попытки уже учтены в errorRate)
     document.getElementById('backspaces').textContent = `Исправлений (Backspace): ${appState.backspaceCount}`;
     
     document.querySelector('.sample').style.display = 'none';
@@ -360,20 +367,10 @@ const endSession = () => {
         elapsedTime, 
         speed, 
         appState.userNumberOfCharacters, 
-        textArray.length
+        textArray.length,
+        dirtinessIndex,
+        appState.backspaceCount
     );
-    // saveSessionData(
-    //     appState.timeStart, 
-    //     username, 
-    //     elapsedTime, 
-    //     speed, 
-    //     appState.userNumberOfCharacters, 
-    //     textArray.length,
-    //     errorRate,
-    //     cleanliness,
-    //     dirtinessIndex,
-    //     appState.backspaceCount
-    // );
 };
 
 function formatDateToMySQL(date) {
@@ -386,13 +383,24 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters, numberOfLines) => {
+const saveSessionData = (
+    fullAttemptTime, 
+    username, 
+    timeSpent, 
+    speed, 
+    userNumberOfCharacters, 
+    numberOfLines,
+    dirtinessIndex,
+    backspaceCount
+) => {
     if (!selectedDictionaryName) {
         console.error('Error: dictionary not selected before saving.');
         return;
     }
+    
     const attemptTime = formatDateToMySQL(fullAttemptTime);
     const codeIds = textArray.map(item => item.idCode);
+    
     const data = {
         attemptTime: attemptTime,
         username: username,
@@ -401,8 +409,11 @@ const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumber
         speed: speed,
         userNumberOfCharacters: userNumberOfCharacters,
         userNumberOfSnippets: numberOfLines,
-        idCodes: codeIds
+        idCodes: codeIds,
+        dirtinessIndex: dirtinessIndex,
+        backspaceCount: backspaceCount
     };
+    
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {

@@ -35,7 +35,7 @@ class AttemptsController {
             return ['error' => $e->getMessage()];
         }
     }
-
+    
     public function getAttempts() {
         try {
             $result = $this->model->getAttempts();
@@ -47,6 +47,9 @@ class AttemptsController {
                     if (!isset($row['idUser'])) {
                         throw new Exception("Отсутствует idUser в данных попытки");
                     }
+                    // Добавляем форматирование для новых полей
+                    $row['DirtinessIndex'] = round($row['DirtinessIndex'], 2);
+                    $row['BackspaceCount'] = (int)$row['BackspaceCount'];
                     $data[] = $row;
                 }
             }
@@ -57,7 +60,7 @@ class AttemptsController {
             return ['error' => $e->getMessage()];
         }
     }
-    
+
     public function closeModelConnection() {
         if ($this->model) {
             $this->model->closeConnection();

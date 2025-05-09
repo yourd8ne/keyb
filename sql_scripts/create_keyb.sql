@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS `KeyB`.`Attempts` (
   `Speed` DOUBLE NOT NULL,
   `UserNumberOfCharacters` INT NOT NULL,
   `UserNumberOfSnippets` INT NOT NULL,
+  `DirtinessIndex` DOUBLE NOT NULL,
+  `BackspaceCount` INT NOT NULL,
   PRIMARY KEY (`idAttempt`),
   FOREIGN KEY (`idUser`)
     REFERENCES `KeyB`.`Users` (`idUsers`)
