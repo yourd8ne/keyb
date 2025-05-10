@@ -34,41 +34,6 @@ BEGIN
     LIMIT 1;
 END //
 
--- CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
--- BEGIN
---     DECLARE id_Dictionary INT;
---     DECLARE id_Language INT;
---     DECLARE numberOfCodesForStudent INT;
-
---     -- Получаем id словаря, язык и количество кодов для студента
---     SELECT idDictionary, Languages_idLanguage, NumberOfCodesForStudent
---     INTO id_Dictionary, id_Language, numberOfCodesForStudent
---     FROM Dictionaries
---     WHERE Name = dictionaryName
---     LIMIT 1;
-
---     -- Проверка, что словарь найден
---     IF id_Dictionary IS NOT NULL THEN
---         -- Проверка, что количество кодов для студента не NULL
---         IF numberOfCodesForStudent IS NOT NULL THEN
---             -- Возвращаем случайные строки из словаря
---             SELECT dc.Code, l.HighlightName, dc.idCode
---             FROM Dictionary_Codes dc
---             JOIN Languages l ON l.idLanguage = id_Language
---             WHERE dc.Dictionaries_idDictionary = id_Dictionary
---             ORDER BY RAND()
---             LIMIT numberOfCodesForStudent;
---         ELSE
---             SIGNAL SQLSTATE '45000'
---             SET MESSAGE_TEXT = 'NumberOfCodesForStudent is NULL';
---         END IF;
---     ELSE
---         -- Если словарь не найден, выбрасываем ошибку
---         SIGNAL SQLSTATE '45000'
---         SET MESSAGE_TEXT = 'Dictionary not found';
---     END IF;
--- END //
-
 CREATE PROCEDURE getCodes(IN dictionaryName VARCHAR(50))
 BEGIN
     DECLARE id_Dictionary INT;
@@ -122,7 +87,9 @@ CREATE PROCEDURE saveSessionData(
     IN timeSpent DOUBLE,
     IN speed DOUBLE,
     IN userNumberOfCharacters INT,
-    IN userNumberOfSnippets INT
+    IN userNumberOfSnippets INT,
+    IN dirtinessIndex DOUBLE,
+    IN backspaceCount INT
 )
 BEGIN
     DECLARE userId INT;
@@ -153,8 +120,30 @@ BEGIN
     END IF;
 
     -- Вставка данных о попытке
-    INSERT INTO Attempts (Date, Time, idUser, idDictionary, inClass, Speed, UserNumberOfCharacters, UserNumberOfSnippets)
-    VALUES (attemptTime, SEC_TO_TIME(timeSpent), userId, dictId, 1, speed, userNumberOfCharacters, userNumberOfSnippets);
+    INSERT INTO Attempts (
+        Date, 
+        Time, 
+        idUser, 
+        idDictionary, 
+        inClass, 
+        Speed, 
+        UserNumberOfCharacters, 
+        UserNumberOfSnippets,
+        DirtinessIndex,
+        BackspaceCount
+    )
+    VALUES (
+        attemptTime, 
+        SEC_TO_TIME(timeSpent), 
+        userId, 
+        dictId, 
+        1, 
+        speed, 
+        userNumberOfCharacters, 
+        userNumberOfSnippets,
+        dirtinessIndex,
+        backspaceCount
+    );
 END //
 
 CREATE PROCEDURE saveCodeForSession(
@@ -210,7 +199,9 @@ BEGIN
         a.inClass,
         ROUND(a.Speed, 2) AS Speed,
         a.UserNumberOfCharacters,
-        a.UserNumberOfSnippets
+        a.UserNumberOfSnippets,
+        a.DirtinessIndex,
+        a.BackspaceCount
     FROM
         Attempts a
     LEFT JOIN
@@ -219,96 +210,22 @@ BEGIN
         Dictionaries d ON a.idDictionary = d.idDictionary;
 END //
 
-
--- CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
--- BEGIN
---     DECLARE user_exists INT;
-    
---     -- Проверяем существование пользователя
---     SELECT COUNT(*) INTO user_exists FROM Users WHERE idUsers = p_user_id;
-    
---     IF user_exists = 0 THEN
---         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
---     ELSE
---         -- Основной запрос для расчёта статистики
---         SELECT 
---             COUNT(*) AS attempts_count,
---             AVG(Speed) AS mean_speed,
---             MAX(Speed) AS max_speed,
-            
---             -- Медиана (50-й перцентиль)
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.5)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS median_speed,
-            
---             -- 95-й перцентиль
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.95)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS percentile_95,
-            
---             -- 3-й квартиль (75-й перцентиль)
---             (
---                 SELECT SUBSTRING_INDEX(
---                     SUBSTRING_INDEX(
---                         GROUP_CONCAT(Speed ORDER BY Speed SEPARATOR ','),
---                         ',',
---                         CEIL(COUNT(*) * 0.75)
---                     ),
---                     ',',
---                     -1
---                 )
---                 FROM Attempts
---                 WHERE idUser = p_user_id
---             ) AS quartile_3,
-            
---             AVG(UserNumberOfCharacters) AS avg_chars,
---             AVG(UserNumberOfSnippets) AS avg_snippets,
---             SUM(CASE WHEN inClass = 1 THEN 1 ELSE 0 END) AS in_class_count
---         FROM Attempts
---         WHERE idUser = p_user_id;
---     END IF;
--- END //
-
 CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
 BEGIN
     DECLARE user_exists INT;
     DECLARE total_attempts INT;
-    
-    -- Проверяем существование пользователя
+
     SELECT COUNT(*) INTO user_exists FROM Users WHERE idUsers = p_user_id;
     
     IF user_exists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
     ELSE
-        -- Увеличиваем лимит для GROUP_CONCAT
         SET SESSION group_concat_max_len = 1000000;
         
-        -- Основной запрос с оптимизированными подзапросами
         SELECT 
             COUNT(*) AS attempts_count,
             AVG(Speed) AS mean_speed,
             MAX(Speed) AS max_speed,
-            -- Исправленная медиана
             (
                 SELECT AVG(Speed)
                 FROM (
@@ -334,44 +251,4 @@ BEGIN
         WHERE idUser = p_user_id;
     END IF;
 END //
-DELIMITER ;
--- Языки, словари, коды..
-DELIMITER //
-INSERT INTO Languages (Name, HighlightName) VALUES ('Python', 'python');
-INSERT INTO Languages (Name, HighlightName) VALUES ('C++', 'cpp');
-
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('simplePythonClass', 1, 1);
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('baseCppCodes', 2, 10);
-INSERT INTO Dictionaries (Name, Languages_idLanguage, NumberOfCodesForStudent) VALUES ('sklearnExamples', 1, 15);
-
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (1, 'class Dog:\n  def __init__(self, name):\n    self.name = name\n  def bark(self):\n    print(f"{self.name} says woof!")');
-
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'int result = a + b * c;');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::vector<int> numbers = {1, 2, 3, 4, 5};');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::cout << "Hello, world!" << std::endl;');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'for (int i = 0; i < 10; i++) std::cout << i << " ";');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'double area = 3.14 * radius * radius;');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::string name = "John";');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'if (x > y) std::swap(x, y);');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'bool isEven = (num % 2 == 0);');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'std::map<std::string, int> score;');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (2, 'const int MAX_SIZE = 100;');
-
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'import matplotlib.pyplot as plt');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'SVC(kernel="linear", C=0.025, random_state=42),');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'X += 2 * rng.uniform(size=X.shape)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'figure = plt.figure(figsize=(27, 9))');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'cm_bright = ListedColormap(["#FF0000", "#0000FF"])');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'for name, clf in zip(names, classifiers):');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'score = clf.score(X_test, y_test)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'clf = make_pipeline(StandardScaler(), clf)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'lw_mse[i, j] = lw.error_norm(real_cov, scaling=False)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'oa_shrinkage = np.zeros((n_samples_range.size, repeat))');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'plt.plot(X_test, y_1, color="cornflowerblue", label="max_depth=2", linewidth=2)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'import matplotlib.pyplot as plt');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'y[::5, :] += 0.5 - rng.rand(20, 2)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'X = np.sort(200 * rng.rand(100, 1) - 100, axis=0)');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'train_ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train)');
-
-//
 DELIMITER ;

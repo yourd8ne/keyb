@@ -12,7 +12,7 @@ class SessionController {
         $input = json_decode(file_get_contents('php://input'), true);
     
         // Проверка данных на наличие всех необходимых полей
-        if (!$input || !isset($input['attemptTime'], $input['username'], $input['selectedDict'], $input['timeSpent'], $input['speed'], $input['userNumberOfCharacters'], $input['userNumberOfSnippets'], $input['idCodes'])) {
+        if (!$input || !isset($input['attemptTime'], $input['username'], $input['selectedDict'], $input['timeSpent'], $input['speed'], $input['userNumberOfCharacters'], $input['userNumberOfSnippets'], $input['idCodes'], $input['dirtinessIndex'], $input['backspaceCount'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid input']);
             return;
@@ -30,7 +30,9 @@ class SessionController {
                 $input['timeSpent'],
                 $input['speed'],
                 $input['userNumberOfCharacters'],
-                $input['userNumberOfSnippets']
+                $input['userNumberOfSnippets'],
+                $input['dirtinessIndex'],
+                $input['backspaceCount']
             );
 
             // Получение идентификатора словаря по названию

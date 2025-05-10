@@ -3,11 +3,24 @@ const appState = {
     userNumberOfCharacters: 0,
     currentArrayIndex: 0,
     numberOfChars: undefined,
+    
+    totalAttemptErrors: 0,
+    totalErrors: 0,
+    totalAttempts: 0,
+    correctChars: 0,
+    backspaceCount: 0,
+    
     reset(fullReset = false) {
         this.timeStart = null;
         this.userNumberOfCharacters = 0;
         this.currentArrayIndex = 0;
         this.numberOfChars = undefined;
+        
+        this.totalAttemptErrors = 0;
+        this.totalErrors = 0;
+        this.totalAttempts = 0;
+        this.correctChars = 0;
+        this.backspaceCount = 0;
 
         if (fullReset) {
             textArray = [];
@@ -44,7 +57,6 @@ const setAppStateClass = (stateClass) => {
     sample.setAttribute('inert', '');
 
     if (stateClass === 'preparation') {
-        // output.style.display = 'none';
         mainHeader.textContent = 'Практика набора кода';
         preparation.style.display = 'block';
         readyButton.style.display = 'block';
@@ -118,7 +130,9 @@ const createSingleLineEditor = (container, mode) => {
         viewportMargin: Infinity,
         lineWrapping: false,
         indentUnit: 4,
-        tabSize: 4
+        indentWithTabs: true,
+        tabSize: 4,
+        electricChars: true
     });
     
     editor.setSize(null, 28);
@@ -129,10 +143,15 @@ const createSingleLineEditor = (container, mode) => {
 
 const checkInput = (editor) => {
     const currentItem = textArray[appState.currentArrayIndex];
-    const currentText = normalizeWhitespace(currentItem.code);
-    const userInput = normalizeWhitespace(editor.getValue());
+    const currentText = currentItem.code;
+    const userInput = editor.getValue();
+    console.log(currentText);
+    console.log(userInput);
+    
+    appState.totalAttempts++;
     
     if (userInput === currentText) {
+        appState.correctChars += currentText.length;
         appState.userNumberOfCharacters += currentText.length;
         editor.setValue('');
 
@@ -146,6 +165,13 @@ const checkInput = (editor) => {
             endSession();
         }
     } else {
+        appState.totalAttemptErrors++;
+        const distance = levenshteinDistance(userInput, currentText);
+        appState.totalErrors += distance;
+        appState.userNumberOfCharacters += userInput.length;
+        appState.correctChars += currentText.length - distance;
+        // console.log(userInput, currentText);
+        // console.log(distance, appState.totalErrors, appState.userNumberOfCharacters, appState.correctChars);
         editor.getWrapperElement().classList.add('cm-error');
         setTimeout(() => {
             editor.getWrapperElement().classList.remove('cm-error');
@@ -153,12 +179,12 @@ const checkInput = (editor) => {
     }
 };
 
-const normalizeWhitespace = (str) => {
-    return str
-        .replace(/\t/g, '    ')
-        .trim()
-        .replace(/\s+/g, ' ');
-};
+// const normalizeWhitespace = (str) => {
+//     return str
+//         .replace(/\t/g, '    ')
+//         .trim()
+//         .replace(/\s+/g, ' ');
+// };
 
 const createInputField = () => {
     const inputContainer = document.getElementById('input-container');
@@ -279,13 +305,20 @@ const setupInputHandler = () => {
     const firstInputHandler = () => {
         if (!appState.timeStart) {
             appState.timeStart = new Date();
-            console.log(`начало ${appState.timeStart}`);
             editor.off('change', firstInputHandler);
         }
     };
     
     editor.on('change', firstInputHandler);
-    editor.on('keydown', handleInput);
+    
+    // Обработчик для подсчета backspace
+    editor.on('keydown', (cm, event) => {
+        if (event.key === 'Backspace') {
+            appState.backspaceCount++;
+        }
+        handleInput(cm, event);
+    });
+    
     editor.focus();
 };
 
@@ -300,42 +333,71 @@ const handleInput = (editor, event) => {
     }
 };
 
+function levenshteinDistance(a, b) {
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // замена
+                    matrix[i][j - 1] + 1,     // вставка
+                    matrix[i - 1][j] + 1      // удаление
+                );
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+}
+
 const endSession = () => {
     if (!appState.timeStart) {
         console.error("Error: timeStart not set.");
         return;
     }
-    timeEnd = new Date();
-    console.log(`endSession timestart: ${appState.timeStart}`);
-    console.log(`timeEnd ${timeEnd}`);
-
+    
+    const timeEnd = new Date();
     const elapsedTime = Math.max((timeEnd - appState.timeStart) / 1000, 0.1);
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
     
-    const numberOfLines = textArray.length;
-
-    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${numberOfLines}`;
+    // Процент ошибок: сколько раз пользователь ошибался при отправке строки (Enter)
+    // Формула: (количество неверных попыток / общее количество попыток) * 100%
+    const errorRate = (appState.totalErrors / appState.totalAttempts) * 100;
+    // Чистота набора: процент правильно введённых символов от общего объёма кода
+    // Формула: (верно введённые символы / общее количество символов в образце) * 100%
+    const cleanliness = (appState.correctChars / totalCharCount) * 100;
+    // Индекс грязности: количество ошибок на 1000 символов кода
+    // Умножение на 1000 даёт удобную для восприятия метрику (например, "5 ошибок на 1000 символов")
+    // Формула: (общее количество ошибок / общее количество символов) * 1000
+    const dirtinessIndex = (appState.totalErrors / appState.userNumberOfCharacters) * 1000;
+    
+    document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
     document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;
     document.getElementById('time').textContent = `Время: ${Math.trunc(elapsedTime)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минуту`;
+    document.getElementById('error-rate').textContent = `Процент ошибок: ${errorRate.toFixed(1)}%`;
+    document.getElementById('cleanliness').textContent = `Чистота набора: ${cleanliness.toFixed(1)}%`;
+    document.getElementById('dirtiness').textContent = `Индекс грязности: ${dirtinessIndex.toFixed(1)}`;
+    // Количество нажатий Backspace: показывает, как часто пользователь исправлял ввод до проверки
+    // Важно: учитываются только исправления, не приведшие к ошибке (ошибочные попытки уже учтены в errorRate)
+    document.getElementById('backspaces').textContent = `Исправлений (Backspace): ${appState.backspaceCount}`;
     
     document.querySelector('.sample').style.display = 'none';
     document.getElementById('input-container').style.display = 'none';
     
     setAppStateClass('output');
-    
-    // console.log(
-    //     elapsedTime.toFixed(3),
-    //     totalCharCount,
-    //     timeEnd.toString(),
-    //     appState.timeStart.toString(), 
-    //     username, 
-    //     elapsedTime, 
-    //     speed, 
-    //     appState.userNumberOfCharacters, 
-    //     numberOfLines
-    // );
     
     saveSessionData(
         appState.timeStart, 
@@ -343,7 +405,9 @@ const endSession = () => {
         elapsedTime, 
         speed, 
         appState.userNumberOfCharacters, 
-        numberOfLines
+        textArray.length,
+        dirtinessIndex,
+        appState.backspaceCount
     );
 };
 
@@ -357,13 +421,24 @@ function formatDateToMySQL(date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumberOfCharacters, numberOfLines) => {
+const saveSessionData = (
+    fullAttemptTime, 
+    username, 
+    timeSpent, 
+    speed, 
+    userNumberOfCharacters, 
+    numberOfLines,
+    dirtinessIndex,
+    backspaceCount
+) => {
     if (!selectedDictionaryName) {
         console.error('Error: dictionary not selected before saving.');
         return;
     }
+    
     const attemptTime = formatDateToMySQL(fullAttemptTime);
     const codeIds = textArray.map(item => item.idCode);
+    
     const data = {
         attemptTime: attemptTime,
         username: username,
@@ -372,8 +447,11 @@ const saveSessionData = (fullAttemptTime, username, timeSpent, speed, userNumber
         speed: speed,
         userNumberOfCharacters: userNumberOfCharacters,
         userNumberOfSnippets: numberOfLines,
-        idCodes: codeIds
+        idCodes: codeIds,
+        dirtinessIndex: dirtinessIndex,
+        backspaceCount: backspaceCount
     };
+    
     fetch('controllers/SessionController.php', {
         method: 'POST',
         headers: {

@@ -23,7 +23,8 @@
       box-sizing: border-box;
       justify-content: center; /* Вертикальное центрирование */
       align-items: center; /* Горизонтальное центрирование */
-  }
+      display: flex;
+}
   
   .container {
       background-color: var(--bg-panel);
@@ -81,6 +82,66 @@
       margin-bottom: 20px;
       text-decoration: none;
   }
+
+  /* Стили для всех input */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background-color: var(--bg-panel);
+    font-size: 16px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 2px rgba(33, 133, 208, 0.2);
+    outline: none;
+}
+
+/* Стили для сообщения об ошибке */
+.error {
+    color: var(--danger);
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* Стили для кнопки входа */
+.button-login {
+    width: 100%;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.button-login:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Стили для блока переключения форм */
+.switch-form {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-light);
+}
+
+.switch-form a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.switch-form a:hover {
+    text-decoration: underline;
+}
   
   /* Блоки кода */
   /* .code-container {
@@ -141,4 +202,34 @@
       .CodeMirror {
           font-size: 13px;
       }
+  }
+
+  .metric-tooltip {
+    position: relative;
+    display: inline-block;
+    margin: 10px 0;
+    cursor: help;
+  }
+  
+  .tooltip {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 14px;
+  }
+  
+  .metric-tooltip:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
   }
