@@ -4,7 +4,7 @@ const appState = {
     currentArrayIndex: 0,
     numberOfChars: undefined,
     
-    // Новые переменные для метрик "грязности"
+    totalAttemptErrors: 0,
     totalErrors: 0,
     totalAttempts: 0,
     correctChars: 0,
@@ -16,6 +16,7 @@ const appState = {
         this.currentArrayIndex = 0;
         this.numberOfChars = undefined;
         
+        this.totalAttemptErrors = 0;
         this.totalErrors = 0;
         this.totalAttempts = 0;
         this.correctChars = 0;
@@ -56,7 +57,6 @@ const setAppStateClass = (stateClass) => {
     sample.setAttribute('inert', '');
 
     if (stateClass === 'preparation') {
-        // output.style.display = 'none';
         mainHeader.textContent = 'Практика набора кода';
         preparation.style.display = 'block';
         readyButton.style.display = 'block';
@@ -130,7 +130,9 @@ const createSingleLineEditor = (container, mode) => {
         viewportMargin: Infinity,
         lineWrapping: false,
         indentUnit: 4,
-        tabSize: 4
+        indentWithTabs: true,
+        tabSize: 4,
+        electricChars: true
     });
     
     editor.setSize(null, 28);
@@ -141,8 +143,10 @@ const createSingleLineEditor = (container, mode) => {
 
 const checkInput = (editor) => {
     const currentItem = textArray[appState.currentArrayIndex];
-    const currentText = normalizeWhitespace(currentItem.code);
-    const userInput = normalizeWhitespace(editor.getValue());
+    const currentText = currentItem.code;
+    const userInput = editor.getValue();
+    console.log(currentText);
+    console.log(userInput);
     
     appState.totalAttempts++;
     
@@ -161,7 +165,13 @@ const checkInput = (editor) => {
             endSession();
         }
     } else {
-        appState.totalErrors++;
+        appState.totalAttemptErrors++;
+        const distance = levenshteinDistance(userInput, currentText);
+        appState.totalErrors += distance;
+        appState.userNumberOfCharacters += userInput.length;
+        appState.correctChars += currentText.length - distance;
+        // console.log(userInput, currentText);
+        // console.log(distance, appState.totalErrors, appState.userNumberOfCharacters, appState.correctChars);
         editor.getWrapperElement().classList.add('cm-error');
         setTimeout(() => {
             editor.getWrapperElement().classList.remove('cm-error');
@@ -169,12 +179,12 @@ const checkInput = (editor) => {
     }
 };
 
-const normalizeWhitespace = (str) => {
-    return str
-        .replace(/\t/g, '    ')
-        .trim()
-        .replace(/\s+/g, ' ');
-};
+// const normalizeWhitespace = (str) => {
+//     return str
+//         .replace(/\t/g, '    ')
+//         .trim()
+//         .replace(/\s+/g, ' ');
+// };
 
 const createInputField = () => {
     const inputContainer = document.getElementById('input-container');
@@ -323,6 +333,34 @@ const handleInput = (editor, event) => {
     }
 };
 
+function levenshteinDistance(a, b) {
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // замена
+                    matrix[i][j - 1] + 1,     // вставка
+                    matrix[i - 1][j] + 1      // удаление
+                );
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+}
+
 const endSession = () => {
     if (!appState.timeStart) {
         console.error("Error: timeStart not set.");
@@ -343,7 +381,7 @@ const endSession = () => {
     // Индекс грязности: количество ошибок на 1000 символов кода
     // Умножение на 1000 даёт удобную для восприятия метрику (например, "5 ошибок на 1000 символов")
     // Формула: (общее количество ошибок / общее количество символов) * 1000
-    const dirtinessIndex = (appState.totalErrors / totalCharCount) * 1000;
+    const dirtinessIndex = (appState.totalErrors / appState.userNumberOfCharacters) * 1000;
     
     document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
     document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;

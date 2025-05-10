@@ -42,10 +42,25 @@ $controller->handleRequest();
                 <div id="numberOfCodes"></div>
                 <div id="numberOfChars"></div>
 
+                <div class="metric-tooltip">
                 <div id="error-rate"></div>
+                <span class="tooltip">Процент строк с ошибками (неверные попытки / все попытки)</span>
+                </div>
+
+                <div class="metric-tooltip">
                 <div id="cleanliness"></div>
+                <span class="tooltip">Доля верных символов от общего объёма кода</span>
+                </div>
+
+                <div class="metric-tooltip">
                 <div id="dirtiness"></div>
+                <span class="tooltip">Ошибки на 1000 символов (чем меньше, тем лучше)</span>
+                </div>
+
+                <div class="metric-tooltip">
                 <div id="backspaces"></div>
+                <span class="tooltip">Количество исправлений до проверки</span>
+                </div>
                 
                 <button id="again">Повторить</button>
                 <button id="back-to-menu">Вернуться в меню</button>
