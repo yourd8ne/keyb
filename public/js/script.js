@@ -170,15 +170,66 @@ const createSingleLineEditor = (container, mode) => {
     return editor;
 };
 
+function levenshteinDistance(a, b) {
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // замена
+                    matrix[i][j - 1] + 1,     // вставка
+                    matrix[i - 1][j] + 1      // удаление
+                );
+            }
+        }
+    }
+
+    // Учитываем разницу в длине строк как одну ошибку
+    if (Math.abs(a.length - b.length) > 0) {
+        return Math.min(matrix[b.length][a.length], matrix[b.length][a.length] + 1);
+    }
+
+    return matrix[b.length][a.length];
+}
+
+function countMismatchedCharacters(a, b) {
+    let mismatches = 0;
+    const minLength = Math.min(a.length, b.length);
+
+    for (let i = 0; i < minLength; i++) {
+        if (a[i] !== b[i]) {
+            mismatches++;
+        }
+    }
+
+    // Учитываем разницу в длине строк как одну ошибку
+    if (Math.abs(a.length - b.length) > 0) {
+        mismatches += 1;
+    }
+
+    return mismatches;
+}
+
 const checkInput = (editor) => {
     const currentItem = textArray[appState.currentArrayIndex];
     const currentText = currentItem.code;
     const userInput = editor.getValue();
     console.log(currentText);
     console.log(userInput);
-    
+
     appState.totalAttempts++;
-    
+
     if (userInput === currentText) {
         appState.correctChars += currentText.length;
         appState.userNumberOfCharacters += currentText.length;
@@ -205,7 +256,6 @@ const checkInput = (editor) => {
         }, 1000);
     }
 };
-
 
 function addHintToEditor(editor, hintText) {
     const hintElement = document.createElement('div');
@@ -386,78 +436,51 @@ const handleInput = (editor, event) => {
     }
 };
 
-function levenshteinDistance(a, b) {
-    const matrix = [];
-
-    for (let i = 0; i <= b.length; i++) {
-        matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= a.length; j++) {
-        matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1, // замена
-                    matrix[i][j - 1] + 1,     // вставка
-                    matrix[i - 1][j] + 1      // удаление
-                );
-            }
-        }
-    }
-
-    return matrix[b.length][a.length];
-}
-
 const endSession = () => {
     if (!appState.timeStart) {
         console.error("Error: timeStart not set.");
         return;
     }
-    
+
     const timeEnd = new Date();
     const elapsedTime = Math.max((timeEnd - appState.timeStart) / 1000, 0.1);
     const totalCharCount = textArray.reduce((total, item) => total + item.code.length, 0);
     const speed = totalCharCount / (elapsedTime / 60);
-    
-    // Процент ошибок: сколько раз пользователь ошибался при отправке строки (Enter)
-    // Формула: (количество неверных попыток / общее количество попыток) * 100%
-    const errorRate = (appState.totalErrors / appState.totalAttempts) * 100;
+
     // Чистота набора: процент правильно введённых символов от общего объёма кода
-    // Формула: (верно введённые символы / общее количество символов в образце) * 100%
-    const cleanliness = (appState.correctChars / totalCharCount) * 100;
+    const cleanliness = Math.min((appState.correctChars / totalCharCount) * 100, 100);
+
     // Индекс грязности: количество ошибок на 1000 символов кода
-    // Умножение на 1000 даёт удобную для восприятия метрику (например, "5 ошибок на 1000 символов")
-    // Формула: (общее количество ошибок / общее количество символов) * 1000
-    const dirtinessIndex = (appState.totalErrors / appState.userNumberOfCharacters) * 1000;
-    
+    console.log(appState.totalErrors, appState.userNumberOfCharacters);
+    const dirtinessIndex = (appState.totalErrors / Math.max(appState.userNumberOfCharacters, 1)) * 1000;
+
+    // Коэффициент ошибок
+    const errorCoefficient = (appState.totalErrors / Math.max(appState.userNumberOfCharacters, 1)) * 100;
+
+    // Коэффициент исправлений
+    const correctionCoefficient = (appState.backspaceCount / Math.max(appState.userNumberOfCharacters, 1)) * 100;
+
     document.getElementById('numberOfCodes').textContent = `Количество кодов: ${textArray.length}`;
     document.getElementById('numberOfChars').textContent = `Количество символов: ${appState.numberOfChars}`;
     document.getElementById('time').textContent = `Время: ${Math.trunc(elapsedTime)} с`;
     document.getElementById('speed').textContent = `Скорость: ${speed.toFixed(1)} символов в минуту`;
-    document.getElementById('error-rate').textContent = `Процент ошибок: ${errorRate.toFixed(1)}%`;
     document.getElementById('cleanliness').textContent = `Чистота набора: ${cleanliness.toFixed(1)}%`;
     document.getElementById('dirtiness').textContent = `Индекс грязности: ${dirtinessIndex.toFixed(1)}`;
-    // Количество нажатий Backspace: показывает, как часто пользователь исправлял ввод до проверки
-    // Важно: учитываются только исправления, не приведшие к ошибке (ошибочные попытки уже учтены в errorRate)
     document.getElementById('backspaces').textContent = `Исправлений (Backspace): ${appState.backspaceCount}`;
-    
+    document.getElementById('error-coefficient').textContent = `Коэффициент ошибок: ${errorCoefficient.toFixed(1)}%`;
+    document.getElementById('correction-coefficient').textContent = `Коэффициент исправлений: ${correctionCoefficient.toFixed(1)}%`;
+
     document.querySelector('.sample').style.display = 'none';
     document.getElementById('input-container').style.display = 'none';
-    
+
     setAppStateClass('output');
-    
+
     saveSessionData(
-        appState.timeStart, 
-        username, 
-        elapsedTime, 
-        speed, 
-        appState.userNumberOfCharacters, 
+        appState.timeStart,
+        username,
+        elapsedTime,
+        speed,
+        appState.userNumberOfCharacters,
         textArray.length,
         dirtinessIndex,
         appState.backspaceCount

@@ -20,7 +20,6 @@ $controller->handleRequest();
     <div class="container">
         <h2 id='main-header'>Практика набора кода</h2>
         <div class="preparation">
-            <a href="attempts.php" id="attempts_button">View Attempts</a>
             <form class="choose">
                 <div class="form-group">
                     <label for="prog-lang">Выберите словарь</label>
@@ -28,8 +27,9 @@ $controller->handleRequest();
                     </select>
                 </div>
             </form>
+            <button id="ready">Готов</button>
+            <a href="attempts.php" id="attempts_button">View Attempts</a>
         </div>
-        <button id="ready">Готов</button>
         <div class="processing">
             <div class="sample"><!--  inert -->
             </div>
@@ -42,25 +42,36 @@ $controller->handleRequest();
                 <div id="numberOfCodes"></div>
                 <div id="numberOfChars"></div>
 
+                <!-- <div class="metric-tooltip">
+                    <div id="error-rate"></div>
+                    <span class="tooltip">Процент строк с ошибками (неверные попытки / все попытки)</span>
+                </div> -->
+
                 <div class="metric-tooltip">
-                <div id="error-rate"></div>
-                <span class="tooltip">Процент строк с ошибками (неверные попытки / все попытки)</span>
+                    <div id="cleanliness"></div>
+                    <span class="tooltip">Доля верных символов от общего объёма кода</span>
                 </div>
 
                 <div class="metric-tooltip">
-                <div id="cleanliness"></div>
-                <span class="tooltip">Доля верных символов от общего объёма кода</span>
+                    <div id="dirtiness"></div>
+                    <span class="tooltip">Ошибки на 1000 символов (чем меньше, тем лучше)</span>
                 </div>
 
                 <div class="metric-tooltip">
-                <div id="dirtiness"></div>
-                <span class="tooltip">Ошибки на 1000 символов (чем меньше, тем лучше)</span>
+                    <div id="backspaces"></div>
+                    <span class="tooltip">Количество исправлений до проверки</span>
                 </div>
 
                 <div class="metric-tooltip">
-                <div id="backspaces"></div>
-                <span class="tooltip">Количество исправлений до проверки</span>
+                    <div id="error-coefficient"></div>
+                    <span class="tooltip">Процент ошибок, допущенных при наборе текста. Чем ниже значение, тем лучше.</span>
                 </div>
+
+                <div class="metric-tooltip">
+                    <div id="correction-coefficient"></div>
+                    <span class="tooltip">Процент исправлений, сделанных при наборе текста. Чем ниже значение, тем лучше.</span>
+                </div>
+
                 
                 <button id="again">Повторить</button>
                 <button id="back-to-menu">Вернуться в меню</button>
