@@ -74,6 +74,7 @@ $controller->handleRequest();
     <script src="public/lib/codemirror/lib/codemirror.js"></script>
     <script src="public/lib/codemirror/mode/python/python.js"></script>
     <script src="public/lib/codemirror/mode/clike/clike.js"></script>
+    <script src="public/lib/codemirror/mode/javascript/javascript.js"></script>
     <script src="public/js/script.js"></script>
 
     <?php if (isset($_SESSION['username'])): ?>

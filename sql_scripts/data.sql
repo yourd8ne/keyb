@@ -41,7 +41,7 @@ INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'y[::5
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'X = np.sort(200 * rng.rand(100, 1) - 100, axis=0)');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (3, 'train_ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train)');
 
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (1, 'def factorial(n):\n\tif n == 0:\n\t\treturn 1\n\telse:\n\t\treturn n * factorial(n - 1)\n\nprint(factorial(5))');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (1, 'def factorial(n):\n\tif n == 0:\n\t\treturn 1\n\telse:\n\t\treturn n * factorial(n - 1)\nprint(factorial(5))');
 
 
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (4, 'public static void main(String[] args)');
@@ -58,7 +58,7 @@ INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (4, 'Strea
 
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'fun main() { println("Hello, Kotlin!") }');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'val numbers = listOf(1, 2, 3, 4, 5); val even = numbers.filter { it % 2 == 0 }');
-INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'data class User(val name: String, val age: Int)');
+INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'class User(val name: String, val age: Int)');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'fun String.addExclamation() = this + "!"; println("Hello".addExclamation())');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'val map = mapOf("a" to 1, "b" to 2, "c" to 3); println(map["a"])');
 INSERT INTO Dictionary_Codes (Dictionaries_idDictionary, Code) VALUES (5, 'val nullableString: String? = null; val length = nullableString?.length ?: 0');

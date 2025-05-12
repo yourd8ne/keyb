@@ -186,6 +186,27 @@ BEGIN
     END LOOP;
 END //
 
+CREATE PROCEDURE getAttempts()
+BEGIN
+    SELECT
+        a.idUser,
+        a.Date,
+        a.Time,
+        u.Login AS UserName,
+        d.Name AS DictionaryName,
+        a.inClass,
+        ROUND(a.Speed, 2) AS Speed,
+        a.UserNumberOfCharacters,
+        a.UserNumberOfSnippets,
+        a.DirtinessIndex,
+        a.BackspaceCount
+    FROM
+        Attempts a
+    LEFT JOIN
+        Users u ON a.idUser = u.idUsers
+    LEFT JOIN
+        Dictionaries d ON a.idDictionary = d.idDictionary;
+END //
 
 -- Получение всех попыток
 CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
