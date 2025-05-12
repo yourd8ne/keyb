@@ -87,9 +87,33 @@ const showElements = (...ids) => {
     });
 };
 
+function addHintToEditor(editor, hintText, isMultiLine = false) {
+    // Устанавливаем атрибут с подсказкой для первой строки
+    const setHint = () => {
+        const lineElement = editor.getLineHandle(0).lineDiv;
+        lineElement.firstChild.setAttribute('data-hint', hintText);
+    };
+
+    // Обновляем состояние подсказки
+    const updateHint = () => {
+        if (editor.getValue() === '') {
+            setHint();
+        }
+    };
+
+    // Обработчики событий
+    editor.on('change', updateHint);
+    editor.on('focus', updateHint);
+    editor.on('blur', updateHint);
+
+    // Инициализация
+    updateHint();
+}
+
 const createMultiLineEditor = (container, mode, lineCount) => {
+    
     const editor = CodeMirror(container, {
-        lineNumbers: true,
+        lineNumbers: false,
         theme: 'eclipse',
         mode: mode,
         autofocus: true,
@@ -104,6 +128,9 @@ const createMultiLineEditor = (container, mode, lineCount) => {
         tabSize: 4,
         electricChars: false
     });
+
+    editor.getWrapperElement().classList.add('multiline-editor');
+    addHintToEditor(editor, "Проверка кода на Shift+Enter, Ctrl+Enter", true);
     
     const lineHeight = 24;
     editor.setSize(null, lineCount * lineHeight);
@@ -134,6 +161,8 @@ const createSingleLineEditor = (container, mode) => {
         tabSize: 4,
         electricChars: true
     });
+
+    addHintToEditor(editor, "Проверка кода на Enter", false);
     
     editor.setSize(null, 28);
     editor.getWrapperElement().style.overflow = 'hidden';
@@ -170,8 +199,6 @@ const checkInput = (editor) => {
         appState.totalErrors += distance;
         appState.userNumberOfCharacters += userInput.length;
         appState.correctChars += currentText.length - distance;
-        // console.log(userInput, currentText);
-        // console.log(distance, appState.totalErrors, appState.userNumberOfCharacters, appState.correctChars);
         editor.getWrapperElement().classList.add('cm-error');
         setTimeout(() => {
             editor.getWrapperElement().classList.remove('cm-error');
@@ -179,12 +206,28 @@ const checkInput = (editor) => {
     }
 };
 
-// const normalizeWhitespace = (str) => {
-//     return str
-//         .replace(/\t/g, '    ')
-//         .trim()
-//         .replace(/\s+/g, ' ');
-// };
+
+function addHintToEditor(editor, hintText) {
+    const hintElement = document.createElement('div');
+    hintElement.className = 'cm-hint-text';
+    hintElement.textContent = hintText;
+    editor.display.wrapper.appendChild(hintElement);
+    
+    // Обновляем видимость подсказки
+    const updateHint = () => {
+        hintElement.style.opacity = editor.getValue() ? '0' : '1';
+    };
+    
+    // Инициализируем подсказку
+    updateHint();
+    
+    // Следим за изменениями
+    editor.on('change', updateHint);
+    editor.on('focus', () => {
+        hintElement.style.opacity = editor.getValue() ? '0' : '0.7';
+    });
+    editor.on('blur', updateHint);
+}
 
 const createInputField = () => {
     const inputContainer = document.getElementById('input-container');
@@ -228,12 +271,12 @@ const displayCodeSample = (index) => {
 
     const sampleEditor = CodeMirror(codeBlock, {
         value: item.code,
-        lineNumbers: !isSingleLineMode,
+        lineNumbers: false,
         theme: 'eclipse',
         mode: mode,
         readOnly: 'nocursor',
         viewportMargin: Infinity,
-        lineWrapping: false
+        lineWrapping: false,
     });
 
     sampleEditor.setSize(null, lineCount * 24);

@@ -1,5 +1,0 @@
-<IfModule mod_headers.c>
-    <FilesMatch "\.js$">
-        Header set Content-Type "application/javascript"
-    </FilesMatch>
-</IfModule>

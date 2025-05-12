@@ -188,40 +188,23 @@ END //
 
 
 -- Получение всех попыток
-CREATE PROCEDURE getAttempts()
-BEGIN
-    SELECT
-        a.idUser,
-        a.Date,
-        a.Time,
-        u.Login AS UserName,
-        d.Name AS DictionaryName,
-        a.inClass,
-        ROUND(a.Speed, 2) AS Speed,
-        a.UserNumberOfCharacters,
-        a.UserNumberOfSnippets,
-        a.DirtinessIndex,
-        a.BackspaceCount
-    FROM
-        Attempts a
-    LEFT JOIN
-        Users u ON a.idUser = u.idUsers
-    LEFT JOIN
-        Dictionaries d ON a.idDictionary = d.idDictionary;
-END //
-
 CREATE PROCEDURE `GetUserStats`(IN p_user_id INT)
 BEGIN
     DECLARE user_exists INT;
     DECLARE total_attempts INT;
 
+    -- Проверка существования пользователя
     SELECT COUNT(*) INTO user_exists FROM Users WHERE idUsers = p_user_id;
-    
+
     IF user_exists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User not found';
     ELSE
         SET SESSION group_concat_max_len = 1000000;
-        
+
+        -- Сохраняем количество попыток в переменную
+        SELECT COUNT(*) INTO total_attempts FROM Attempts WHERE idUser = p_user_id;
+
+        -- Основной запрос со статистикой
         SELECT 
             COUNT(*) AS attempts_count,
             AVG(Speed) AS mean_speed,
@@ -230,25 +213,19 @@ BEGIN
                 SELECT AVG(Speed)
                 FROM (
                     SELECT Speed, @rownum := @rownum + 1 AS row_number
-                    FROM Attempts, (SELECT @rownum := 0) r
-                    WHERE idUser = p_user_id
-                    ORDER BY Speed
+                    FROM (SELECT Speed FROM Attempts WHERE idUser = p_user_id ORDER BY Speed) AS ordered,
+                         (SELECT @rownum := 0) r
                 ) AS sorted
-                WHERE row_number IN (FLOOR((total + 1)/2), FLOOR((total + 2)/2))
+                WHERE row_number IN (FLOOR((total_attempts + 1)/2), FLOOR((total_attempts + 2)/2))
             ) AS median_speed,
-            -- Остальные перцентили (с оговорками)
-            (
-                SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(Speed ORDER BY Speed), ',', CEIL(COUNT(*) * 0.95)), ',', -1)
-            ) AS percentile_95,
-            (
-                SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(Speed ORDER BY Speed), ',', CEIL(COUNT(*) * 0.75)), ',', -1)
-            ) AS quartile_3,
+            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(Speed ORDER BY Speed), ',', CEIL(total_attempts * 0.95)), ',', -1) AS percentile_95,
+            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(Speed ORDER BY Speed), ',', CEIL(total_attempts * 0.75)), ',', -1) AS quartile_3,
             AVG(UserNumberOfCharacters) AS avg_chars,
             AVG(UserNumberOfSnippets) AS avg_snippets,
             SUM(inClass = 1) AS in_class_count
         FROM Attempts
-        CROSS JOIN (SELECT COUNT(*) AS total FROM Attempts WHERE idUser = p_user_id) AS t
         WHERE idUser = p_user_id;
     END IF;
 END //
+
 DELIMITER ;
