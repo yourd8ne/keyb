@@ -10,26 +10,6 @@ class CodeController {
         $this->model = new DatabaseModel();
     }
 
-    // public function getNumberOfCodes() {
-    //     try {
-    //         $dataFromModel = $this->model->getNumberOfCodes();
-
-    //         if ($dataFromModel === 0) {
-    //             throw new Exception('Data returned from model is 0');
-    //         }
-            
-    //         echo json_encode([
-    //             'NumberOfCodes' => $dataFromModel
-    //         ]);
-    //     } catch (Exception $e) {
-    //         error_log('Error in getNumberOfCodes: ' . $e->getMessage());
-    //         http_response_code(500);
-    //         echo json_encode([
-    //             'error' => 'An error occurred while fetching numberOfCodes info'
-    //         ]);
-    //     }
-    // }
-
     public function getDictionariesInfo() {
         try {
             $dataFromModel = $this->model->getDictionariesInfo();

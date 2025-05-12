@@ -1,89 +1,46 @@
-/* Основные цвета из палитры Semantic UI */
 :root {
-    --primary: #2185d0;       /* Основной синий */
-    --primary-hover: #1678c2; /* Синий при наведении */
-    --danger: #db2828;        /* Красный для ошибок */
-    --text: #333;             /* Основной текст */
-    --text-light: #555;       /* Вторичный текст */
-    --bg: #f9f9f9;           /* Фон страницы */
-    --bg-panel: #ffffff;      /* Фон панелей */
-    --border: #d4d4d5;       /* Границы */
-    --border-light: #e1e4e8; /* Светлые границы */
-    --focus: #85b7d9;        /* Цвет фокуса */
-  }
-  
-  /* Базовые стили */
-  body {
-      font-family: 'Roboto', Arial, sans-serif;
-      background-color: var(--bg);
-      margin: 0;
-      padding: 20px;
-      color: var(--text);
-      min-height: 100vh;
-      box-sizing: border-box;
-      justify-content: center; /* Вертикальное центрирование */
-      align-items: center; /* Горизонтальное центрирование */
-      display: flex;
+    --primary: #2185d0;
+    --primary-hover: #1678c2;
+    --danger: #db2828;
+    --text: #333;
+    --text-light: #555;
+    --bg: #f9f9f9;
+    --bg-panel: #ffffff;
+    --border: #d4d4d5;
+    --border-light: #e1e4e8;
+    --focus: #85b7d9;
 }
-  
-  .container {
-      background-color: var(--bg-panel);
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-      max-width: 800px;
-      width: 90%; /* Добавляем относительную ширину */
-      margin: 30px auto; /* Автоматические отступы по бокам и сверху/снизу */
-      
-  }
-  
-  h2 {
-      color: var(--text);
-      text-align: center;
-      margin-bottom: 25px;
-  }
-  
-  /* Формы и элементы управления */
-  select, input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 20px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background-color: var(--bg-panel);
-      font-size: 16px;
-  }
-  
-  select:focus, input[type="text"]:focus {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 2px rgba(33, 133, 208, 0.2);
-      outline: none;
-  }
-  
-  /* Кнопки */
-  button, .button {
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 15px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      display: inline-block;
-      text-align: center;
-  }
-  
-  button:hover, .button:hover {
-      background-color: var(--primary-hover);
-  }
-  
-  #attempts_button {
-      margin-bottom: 20px;
-      text-decoration: none;
-  }
 
-  /* Стили для всех input */
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: var(--bg);
+    margin: 0;
+    padding: 20px;
+    color: var(--text);
+    min-height: 100vh;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.container {
+    background-color: var(--bg-panel);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 800px;
+    width: 90%;
+    margin: 30px auto;
+}
+
+h2 {
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+select, 
 input[type="text"],
 input[type="password"] {
     width: 100%;
@@ -95,6 +52,7 @@ input[type="password"] {
     font-size: 16px;
 }
 
+select:focus, 
 input[type="text"]:focus,
 input[type="password"]:focus {
     border-color: var(--focus);
@@ -102,14 +60,36 @@ input[type="password"]:focus {
     outline: none;
 }
 
-/* Стили для сообщения об ошибке */
+button, 
+.button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: inline-block;
+    text-align: center;
+}
+
+button:hover, 
+.button:hover {
+    background-color: var(--primary-hover);
+}
+
+#attempts_button {
+    margin-bottom: 20px;
+    text-decoration: none;
+}
+
 .error {
     color: var(--danger);
     margin: 10px 0;
     text-align: center;
 }
 
-/* Стили для кнопки входа */
 .button-login {
     width: 100%;
     background-color: var(--primary);
@@ -127,7 +107,6 @@ input[type="password"]:focus {
     background-color: var(--primary-hover);
 }
 
-/* Стили для блока переключения форм */
 .switch-form {
     text-align: center;
     margin-top: 20px;
@@ -142,76 +121,55 @@ input[type="password"]:focus {
 .switch-form a:hover {
     text-decoration: underline;
 }
-  
-  /* Блоки кода */
-  /* .code-container {
-      margin: 20px 0;
-  }
-  
-  .sample, #input-container {
-      margin-bottom: 15px;
-  } */
 
-    /* Стили CodeMirror */
-        .CodeMirror {
-        font-family: 'Roboto Mono', Consolas, monospace;
-        font-size: 16px; /* Увеличили размер шрифта */
-        line-height: 1.5;
-        border: 2px solid #d4d4d5; /* Более четкая граница */
-        border-radius: 4px;
-        height: auto !important;
-        background-color: #fafafa;
-    }
+.CodeMirror {
+    font-family: 'Roboto Mono', Consolas, monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    border: 2px solid #d4d4d5;
+    border-radius: 4px;
+    height: auto !important;
+    background-color: #fafafa;
+}
 
-    .sample .CodeMirror {
-        background-color: #f5f5f5;
-        border-color: #c1c1c1;
-    }
+.sample .CodeMirror {
+    background-color: #f5f5f5;
+    border-color: #c1c1c1;
+}
 
-    #input-container .CodeMirror {
-        background-color: #ffffff;
-        border-color: #2185d0;
-    }
+#input-container .CodeMirror {
+    background-color: #ffffff;
+    border-color: #2185d0;
+}
 
-    .cm-error {
-        border-color: #db2828 !important;
-        animation: shake 0.5s;
-    }
+.cm-error {
+    border-color: #db2828 !important;
+    animation: shake 0.5s;
+}
 
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        20%, 60% { transform: translateX(-3px); }
-        40%, 80% { transform: translateX(3px); }
-    }
-  /* Статистика */
-  .output {
-      margin-top: 30px;
-  }
-  
-  .output div {
-      margin: 10px 0;
-      font-size: 16px;
-  }
-  
-  /* Адаптивность */
-  @media (max-width: 600px) {
-      .container {
-          padding: 20px;
-      }
-      
-      .CodeMirror {
-          font-size: 13px;
-      }
-  }
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
+}
 
-  .metric-tooltip {
+.output {
+    margin-top: 30px;
+}
+
+.output div {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.metric-tooltip {
     position: relative;
     display: inline-block;
     margin: 10px 0;
     cursor: help;
-  }
-  
-  .tooltip {
+}
+
+.tooltip {
     visibility: hidden;
     width: 200px;
     background-color: #333;
@@ -227,9 +185,19 @@ input[type="password"]:focus {
     opacity: 0;
     transition: opacity 0.3s;
     font-size: 14px;
-  }
-  
-  .metric-tooltip:hover .tooltip {
+}
+
+.metric-tooltip:hover .tooltip {
     visibility: visible;
     opacity: 1;
-  }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+    
+    .CodeMirror {
+        font-size: 13px;
+    }
+}

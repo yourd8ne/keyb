@@ -11,18 +11,15 @@ class SessionController {
     public function saveSessionData() {
         $input = json_decode(file_get_contents('php://input'), true);
     
-        // Проверка данных на наличие всех необходимых полей
         if (!$input || !isset($input['attemptTime'], $input['username'], $input['selectedDict'], $input['timeSpent'], $input['speed'], $input['userNumberOfCharacters'], $input['userNumberOfSnippets'], $input['idCodes'], $input['dirtinessIndex'], $input['backspaceCount'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid input']);
             return;
         }
     
-        // Убедимся, что idCodes это массив строк
         $idCodes = is_array($input['idCodes']) ? array_map('strval', $input['idCodes']) : [];
     
         try {
-            // Сохранение данных сессии
             $idAttempts = $this->model->saveSessionData(
                 $input['attemptTime'],
                 $input['username'],
@@ -35,10 +32,8 @@ class SessionController {
                 $input['backspaceCount']
             );
 
-            // Получение идентификатора словаря по названию
             $idDictionary = $this->model->getDictionaryIdByName($input['selectedDict']);
 
-            // Сохранение кодов для сессии
             $this->model->saveCodeForSession(
                 $idAttempts,
                 $idDictionary,

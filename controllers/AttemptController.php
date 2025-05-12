@@ -16,10 +16,9 @@ class AttemptsController {
                 return $stats;
             }
             
-            // Форматируем данные для удобного отображения
             return [
                 'attempts_count' => $stats['attempts_count'],
-                'in_class_count' => $stats['in_class_count'], // Добавляем ключ in_class_count
+                'in_class_count' => $stats['in_class_count'],
                 'speed' => [
                     'mean' => round($stats['mean_speed'], 2),
                     'max' => $stats['max_speed'],
@@ -43,11 +42,9 @@ class AttemptsController {
             
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
-                    // Проверяем наличие обязательных полей
                     if (!isset($row['idUser'])) {
                         throw new Exception("Отсутствует idUser в данных попытки");
                     }
-                    // Добавляем форматирование для новых полей
                     $row['DirtinessIndex'] = round($row['DirtinessIndex'], 2);
                     $row['BackspaceCount'] = (int)$row['BackspaceCount'];
                     $data[] = $row;
