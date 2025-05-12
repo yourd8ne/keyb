@@ -265,7 +265,17 @@ const displayCodeSample = (index) => {
 
     codeBlock.innerHTML = '';
     
-    const mode = item.highlightName === 'python' ? 'python' : 'text/x-c++src';
+    // Определяем режим подсветки на основе highlightName
+    const modeMap = {
+        'python': 'python',
+        'cpp': 'text/x-c++src',
+        'java': 'text/x-java',
+        'kotlin': 'text/x-kotlin',
+        'javascript': 'javascript',
+        // добавьте другие языки по необходимости
+    };
+    
+    const mode = modeMap[item.highlightName] || 'text/x-c++src';
     const isSingleLineMode = textArray.length > 1;
     const lineCount = isSingleLineMode ? 1 : item.code.split('\n').length;
 
